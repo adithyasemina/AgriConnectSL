@@ -1,49 +1,12 @@
 @import "tailwindcss";
 
-.nav-pill {
-  padding: 12px 18px;
-  border-radius: 999px;
-  font-weight: 700;
-  transition: 0.2s ease;
+* {
+  box-sizing: border-box;
 }
 
-.nav-pill:hover {
-  background: #efefef;
-}
-
-.nav-pill.active {
-  background: #111111;
-  color: white;
-}
-
-.search-box {
-  height: 48px;
-  border-radius: 999px;
-  background: #efefef;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 18px;
-}
-
-.search-box input {
-  width: 100%;
-  background: transparent;
-  outline: none;
-  border: none;
-  color: #111111;
-}
-
-.masonry-grid {
-  columns: 5 230px;
-  column-gap: 18px;
-}
-
-.pin-card {
-  position: relative;
-  break-inside: avoid;
-  margin-bottom: 18px;
-  border-radius: 28px;
-  overflow: hidden;
-  background: #efefef;
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #e8eee8;
 }
