@@ -10,12 +10,6 @@ const generateToken = (user) => {
   );
 };
 
-const sanitizeUser = (user) => {
-  const cleanUser = user.toObject();
-  delete cleanUser.password;
-  return cleanUser;
-};
-
 // Farmer Register
 exports.registerFarmer = async (req, res) => {
   try {
@@ -30,7 +24,7 @@ exports.registerFarmer = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
+    await User.create({
       firstName,
       lastName,
       email,
@@ -40,16 +34,16 @@ exports.registerFarmer = async (req, res) => {
       role: "farmer",
     });
 
-    const token = generateToken(user);
-
-    res.status(201).json({
+    return res.status(201).json({
       message: "Farmer registered successfully",
-      token,
-      role: user.role,
-      user: sanitizeUser(user),
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Register error:", error.message);
+
+    return res.status(500).json({
+      message: "Register failed",
+      error: error.message,
+    });
   }
 };
 
@@ -72,20 +66,34 @@ exports.loginUser = async (req, res) => {
 
     const token = generateToken(user);
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Login successful",
       token,
       role: user.role,
-      user: sanitizeUser(user),
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        province: user.province,
+        district: user.district,
+        isActive: user.isActive,
+      },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Login error:", error.message);
+
+    return res.status(500).json({
+      message: "Login failed",
+      error: error.message,
+    });
   }
 };
 
 // Get logged in user
 exports.getMe = async (req, res) => {
-  res.status(200).json({
+  return res.status(200).json({
     message: "User fetched successfully",
     role: req.user.role,
     user: req.user,

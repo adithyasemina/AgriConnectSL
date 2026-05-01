@@ -5,6 +5,7 @@ import { saveAuthData, UserRole } from "@/lib/auth";
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { useState, ChangeEvent, FormEvent } from "react";
+import toast from "react-hot-toast";
 
 const locations = {
   Central: ["Kandy", "Matale", "Nuwara Eliya"],
@@ -42,6 +43,8 @@ type AuthErrorResponse = {
   message?: string;
   error?: string;
 };
+
+const AUTH_TOAST_ID = "auth-toast";
 
 const EyeIcon = () => (
   <svg
@@ -84,7 +87,9 @@ export default function AuthPage() {
   const router = useRouter();
 
   const [isRightPanelActive, setIsRightPanelActive] = useState(false);
-  const [selectedProvince, setSelectedProvince] = useState<ProvinceName | "">("");
+  const [selectedProvince, setSelectedProvince] = useState<ProvinceName | "">(
+    ""
+  );
   const [selectedDistrict, setSelectedDistrict] = useState("");
 
   const [isSignUpWaiting, setIsSignUpWaiting] = useState(false);
@@ -94,15 +99,25 @@ export default function AuthPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSignInPassword, setShowSignInPassword] = useState(false);
 
-  const [error, setError] = useState("");
+  const showToastError = (message: string) => {
+    toast.error(message, {
+      id: AUTH_TOAST_ID,
+    });
+  };
+
+  const showToastSuccess = (message: string) => {
+    toast.success(message, {
+      id: AUTH_TOAST_ID,
+    });
+  };
 
   const showRegisterPanel = () => {
-    setError("");
+    toast.dismiss(AUTH_TOAST_ID);
     setIsRightPanelActive(true);
   };
 
   const showLoginPanel = () => {
-    setError("");
+    toast.dismiss(AUTH_TOAST_ID);
     setIsRightPanelActive(false);
   };
 
@@ -121,13 +136,30 @@ export default function AuthPage() {
     }
   };
 
+  const getErrorMessage = (
+    error: unknown,
+    fallbackMessage: string
+  ): string => {
+    const axiosError = error as AxiosError<AuthErrorResponse>;
+
+    return (
+      axiosError.response?.data?.error ||
+      axiosError.response?.data?.message ||
+      fallbackMessage
+    );
+  };
+
   const handleSignUpSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setError("");
+    if (isSignUpWaiting) return;
+
+    const form = e.currentTarget;
+
+    toast.dismiss(AUTH_TOAST_ID);
     setIsSignUpWaiting(true);
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
 
     const firstName = String(formData.get("firstName") || "").trim();
     const lastName = String(formData.get("lastName") || "").trim();
@@ -136,19 +168,19 @@ export default function AuthPage() {
     const confirmPassword = String(formData.get("confirmPassword") || "");
 
     if (password !== confirmPassword) {
-      setError("Password and Confirm Password match wenne na.");
+      showToastError("Passwords do not match.");
       setIsSignUpWaiting(false);
       return;
     }
 
     if (!selectedProvince || !selectedDistrict) {
-      setError("Province saha District select karanna.");
+      showToastError("Please select your province and district.");
       setIsSignUpWaiting(false);
       return;
     }
 
     try {
-      const res = await api.post<AuthResponse>("/api/auth/register-farmer", {
+      await api.post("/api/auth/register-farmer", {
         firstName,
         lastName,
         email,
@@ -157,21 +189,19 @@ export default function AuthPage() {
         district: selectedDistrict,
       });
 
-      saveAuthData({
-        token: res.data.token,
-        role: res.data.role,
-        user: res.data.user,
-      });
+      showToastSuccess("Registration successful. Please login.");
 
-      redirectByRole(res.data.role);
+      setSelectedProvince("");
+      setSelectedDistrict("");
+      setShowSignUpPassword(false);
+      setShowConfirmPassword(false);
+
+      form.reset();
+
+      setIsRightPanelActive(false);
     } catch (error) {
-      const axiosError = error as AxiosError<AuthErrorResponse>;
-
-      setError(
-        axiosError.response?.data?.message ||
-          axiosError.response?.data?.error ||
-          "Register failed"
-      );
+      const message = getErrorMessage(error, "Registration failed.");
+      showToastError(message);
     } finally {
       setIsSignUpWaiting(false);
     }
@@ -180,7 +210,9 @@ export default function AuthPage() {
   const handleSignInSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setError("");
+    if (isSignInWaiting) return;
+
+    toast.dismiss(AUTH_TOAST_ID);
     setIsSignInWaiting(true);
 
     const formData = new FormData(e.currentTarget);
@@ -200,15 +232,12 @@ export default function AuthPage() {
         user: res.data.user,
       });
 
+      showToastSuccess(`Welcome ${res.data.user.firstName}!`);
+
       redirectByRole(res.data.role);
     } catch (error) {
-      const axiosError = error as AxiosError<AuthErrorResponse>;
-
-      setError(
-        axiosError.response?.data?.message ||
-          axiosError.response?.data?.error ||
-          "Login failed"
-      );
+      const message = getErrorMessage(error, "Login failed.");
+      showToastError(message);
     } finally {
       setIsSignInWaiting(false);
     }
@@ -236,12 +265,6 @@ export default function AuthPage() {
             <span className="mb-4 text-sm text-gray-500">
               Create your farmer account in seconds
             </span>
-
-            {error && (
-              <div className="mb-3 w-full rounded-md bg-red-100 px-4 py-3 text-sm font-semibold text-red-700">
-                {error}
-              </div>
-            )}
 
             <div className="flex w-full gap-2">
               <input
@@ -353,7 +376,7 @@ export default function AuthPage() {
               {isSignUpWaiting ? "Creating Account..." : "Sign Up"}
             </button>
 
-            <p className="mt-6 pb-4 text-sm text-gray-600 md:hidden">
+            <p className="mt-2 pb-4 text-sm text-gray-600 md:hidden">
               Already have an account?{" "}
               <button
                 type="button"
@@ -385,12 +408,6 @@ export default function AuthPage() {
             <span className="mb-4 text-sm text-gray-500">
               Sign in With Email & Password
             </span>
-
-            {error && (
-              <div className="mb-3 w-full rounded-md bg-red-100 px-4 py-3 text-sm font-semibold text-red-700">
-                {error}
-              </div>
-            )}
 
             <input
               name="email"
