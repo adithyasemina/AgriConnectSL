@@ -53,6 +53,27 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+
+    blockedReason: {
+      type: String,
+      default: "",
+    },
+
+    blockedAt: {
+      type: Date,
+      default: null,
+    },
+
+    blockedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   {
     timestamps: true,
