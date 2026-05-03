@@ -182,27 +182,27 @@ export default function OfficerDashboardPage() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <HeroStat
             icon={<FarmersIcon />}
-            label="Assigned Farmers"
+            label="Total Farmers"
             value="120"
             change="+8.4% this month"
           />
           <HeroStat
-            icon={<AppointmentIcon />}
-            label="Appointments"
-            value="32"
-            change="+12.1% this week"
+            icon={<ActivityIcon />}
+            label="Total Messages"
+            value="48"
+            change="+5.2% this week"
           />
           <HeroStat
             icon={<ReportIcon />}
-            label="Soil Reports"
-            value="74"
-            change="+18 reports completed"
+            label="Soil Tests"
+            value="32"
+            change="+18 tests completed"
           />
           <HeroStat
-            icon={<ActivityIcon />}
-            label="Pending Reviews"
-            value="16"
-            change="Needs attention"
+            icon={<AppointmentIcon />}
+            label="Articles"
+            value="15"
+            change="Knowledge base"
           />
         </div>
       </section>

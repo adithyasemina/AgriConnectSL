@@ -124,7 +124,7 @@ function ReportsIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
-function AppointmentsIcon({ className = "h-5 w-5" }: IconProps) {
+function AlertsIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg
       className={className}
@@ -136,13 +136,13 @@ function AppointmentsIcon({ className = "h-5 w-5" }: IconProps) {
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="M8 7V3m8 4V3M4 11h16M5 5h14a2 2 0 012 2v13a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"
+        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
       />
     </svg>
   );
 }
 
-function ContentIcon({ className = "h-5 w-5" }: IconProps) {
+function MessagesIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg
       className={className}
@@ -154,12 +154,43 @@ function ContentIcon({ className = "h-5 w-5" }: IconProps) {
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="M7 4h10a2 2 0 012 2v14l-4-2-4 2-4-2-4 2V6a2 2 0 012-2z"
+        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
       />
+    </svg>
+  );
+}
+
+function ArticlesIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="M8 8h8M8 12h8M8 16h5"
+        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+      />
+    </svg>
+  );
+}
+
+function SoilIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
       />
     </svg>
   );
@@ -186,9 +217,10 @@ function LogoutIcon({ className = "h-5 w-5" }: IconProps) {
 const menuItems = [
   { name: "Dashboard", href: "/officer", icon: DashboardIcon },
   { name: "Farmers", href: "/officer/farmers", icon: FarmersIcon },
-  { name: "Appointments", href: "/officer/appointments", icon: AppointmentsIcon },
-  { name: "Reports", href: "/officer/reports", icon: ReportsIcon },
-  { name: "Content", href: "/officer/content", icon: ContentIcon },
+  { name: "Alerts", href: "/officer/alerts", icon: AlertsIcon },
+  { name: "Messages", href: "/officer/messages", icon: MessagesIcon },
+  { name: "Articles", href: "/officer/articles", icon: ArticlesIcon },
+  { name: "Soil Test", href: "/officer/soil-test", icon: SoilIcon },
 ];
 
 export default function OfficerLayout({ children }: { children: ReactNode }) {
@@ -204,7 +236,7 @@ export default function OfficerLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["officer", "admin"]}>
+    <ProtectedRoute allowedRoles={["officer"]}>
       <div className="min-h-screen bg-[#f8fafc] text-slate-900">
         {isMobileOpen && (
           <button
