@@ -181,20 +181,12 @@ export default function ArticlesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">
-            Knowledge Articles
-          </h1>
-          <p className="mt-2 text-sm font-medium text-slate-500">
-            Create and manage farmer education articles
-          </p>
-        </div>
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-black text-white hover:bg-emerald-700"
+            className="flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white hover:bg-blue-700"
           >
             <PlusIcon />
             New Article
@@ -220,7 +212,7 @@ export default function ArticlesPage() {
                 value={formData.title}
                 onChange={handleInputChange}
                 placeholder="Article title..."
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
             </div>
 
@@ -233,7 +225,7 @@ export default function ArticlesPage() {
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 >
                   <option>Crop Management</option>
                   <option>Pest Control</option>
@@ -251,7 +243,7 @@ export default function ArticlesPage() {
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 >
                   <option>Published</option>
                   <option>Draft</option>
@@ -269,7 +261,7 @@ export default function ArticlesPage() {
                 value={formData.description}
                 onChange={handleInputChange}
                 placeholder="Brief description of the article..."
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
             </div>
 
@@ -283,14 +275,14 @@ export default function ArticlesPage() {
                 onChange={handleInputChange}
                 placeholder="Write your article content..."
                 rows={8}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 resize-none"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
               />
             </div>
 
             <div className="flex gap-3 pt-4">
               <button
                 type="submit"
-                className="flex-1 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-black text-white hover:bg-emerald-700"
+                className="flex-1 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white hover:bg-blue-700"
               >
                 {editingId ? "Update Article" : "Publish Article"}
               </button>
@@ -315,22 +307,22 @@ export default function ArticlesPage() {
 
           {/* Desktop Table */}
           <div className="hidden overflow-x-auto md:block">
-            <table className="w-full">
+            <table className="w-full table-fixed">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                  <th className="w-[35%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                     Title
                   </th>
-                  <th className="py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                  <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                     Category
                   </th>
-                  <th className="py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                  <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                     Status
                   </th>
-                  <th className="py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                  <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                     Last Updated
                   </th>
-                  <th className="py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                  <th className="w-[15%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                     Actions
                   </th>
                 </tr>
@@ -341,34 +333,34 @@ export default function ArticlesPage() {
                     key={article.id}
                     className="border-b border-slate-100 hover:bg-slate-50"
                   >
-                    <td className="py-4 px-4">
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">
+                    <td className="w-[35%] py-4 px-4">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-900 truncate">
                           {article.title}
                         </p>
-                        <p className="text-xs text-slate-500 line-clamp-1">
+                        <p className="text-xs text-slate-500 truncate">
                           {article.description}
                         </p>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-sm text-slate-600">
+                    <td className="w-[18%] py-4 px-4 text-sm text-slate-600 truncate">
                       {article.category}
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="w-[14%] py-4 px-4">
                       <span
-                        className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${
+                        className={`inline-block rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap ${
                           article.status === "Published"
-                            ? "bg-emerald-100 text-emerald-700"
+                            ? "bg-blue-100 text-blue-700"
                             : "bg-slate-100 text-slate-700"
                         }`}
                       >
                         {article.status}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-sm text-slate-600">
+                    <td className="w-[18%] py-4 px-4 text-sm text-slate-600 truncate">
                       {new Date(article.lastUpdated).toLocaleDateString()}
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="w-[15%] py-4 px-4">
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEdit(article)}
@@ -398,18 +390,18 @@ export default function ArticlesPage() {
                 className="rounded-2xl border border-slate-200 p-4"
               >
                 <div className="mb-3">
-                  <p className="font-bold text-slate-900">{article.title}</p>
+                  <p className="font-bold text-slate-900 truncate">{article.title}</p>
                   <p className="text-xs text-slate-500 line-clamp-2">
                     {article.description}
                   </p>
                 </div>
 
                 <div className="mb-4 flex items-center justify-between gap-2 text-xs">
-                  <span className="text-slate-600">{article.category}</span>
+                  <span className="text-slate-600 truncate">{article.category}</span>
                   <span
                     className={`rounded-full px-2 py-1 font-bold ${
                       article.status === "Published"
-                        ? "bg-emerald-100 text-emerald-700"
+                        ? "bg-blue-100 text-blue-700"
                         : "bg-slate-100 text-slate-700"
                     }`}
                   >

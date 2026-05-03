@@ -1,226 +1,31 @@
 "use client";
 
 import ProtectedRoute from "@/app/components/ProtectedRoute";
+import PageTitleBar from "@/app/components/PageTitleBar";
+import NotificationDropdown from "@/app/components/NotificationDropdown";
 import { clearAuthData, getAuthUser } from "@/lib/auth";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
-
-type IconProps = {
-  className?: string;
-};
-
-function LogoIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M5 19c8 0 14-6 14-14C11 5 5 11 5 19z"
-      />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 19l8-8" />
-    </svg>
-  );
-}
-
-function MenuIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M4 6h16M4 12h16M4 18h16"
-      />
-    </svg>
-  );
-}
-
-function SearchIcon({ className = "h-4 w-4" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z"
-      />
-    </svg>
-  );
-}
-
-function DashboardIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M4 13h7V4H4v9zM13 20h7V4h-7v16zM4 20h7v-5H4v5z"
-      />
-    </svg>
-  );
-}
-
-function FarmersIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M17 20h5v-2a4 4 0 00-5-4M9 20H4v-2a4 4 0 015-4m0-4a4 4 0 100-8 4 4 0 000 8zm8 0a4 4 0 100-8 4 4 0 000 8z"
-      />
-    </svg>
-  );
-}
-
-function ReportsIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M7 4h7l5 5v11H7V4z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M14 4v5h5M9 13h6M9 17h6"
-      />
-    </svg>
-  );
-}
-
-function AlertsIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-      />
-    </svg>
-  );
-}
-
-function MessagesIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-      />
-    </svg>
-  );
-}
-
-function ArticlesIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-      />
-    </svg>
-  );
-}
-
-function SoilIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-      />
-    </svg>
-  );
-}
-
-function LogoutIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15 12H3m12 0l-4-4m4 4l-4 4M21 4v16"
-      />
-    </svg>
-  );
-}
+import {
+  LuLeaf,
+  LuMenu,
+  LuLayoutDashboard,
+  LuUsers,
+  LuBell,
+  LuMessageCircle,
+  LuNewspaper,
+  LuFlaskConical,
+  LuLogOut,
+} from "react-icons/lu";
 
 const menuItems = [
-  { name: "Dashboard", href: "/officer", icon: DashboardIcon },
-  { name: "Farmers", href: "/officer/farmers", icon: FarmersIcon },
-  { name: "Alerts", href: "/officer/alerts", icon: AlertsIcon },
-  { name: "Messages", href: "/officer/messages", icon: MessagesIcon },
-  { name: "Articles", href: "/officer/articles", icon: ArticlesIcon },
-  { name: "Soil Test", href: "/officer/soil-test", icon: SoilIcon },
+  { name: "Dashboard", href: "/officer", icon: LuLayoutDashboard },
+  { name: "Farmers", href: "/officer/farmers", icon: LuUsers },
+  { name: "Alerts", href: "/officer/alerts", icon: LuBell },
+  { name: "Messages", href: "/officer/messages", icon: LuMessageCircle },
+  { name: "Articles", href: "/officer/articles", icon: LuNewspaper },
+  { name: "Soil Test", href: "/officer/soil-test", icon: LuFlaskConical },
 ];
 
 export default function OfficerLayout({ children }: { children: ReactNode }) {
@@ -252,8 +57,8 @@ export default function OfficerLayout({ children }: { children: ReactNode }) {
           }`}
         >
           <div className="flex h-20 items-center gap-3 border-b border-slate-100 px-6">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-white">
-              <LogoIcon />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-white">
+              <LuLeaf className="h-5 w-5" />
             </div>
 
             <div>
@@ -283,11 +88,11 @@ export default function OfficerLayout({ children }: { children: ReactNode }) {
                     onClick={() => setIsMobileOpen(false)}
                     className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
                       active
-                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
-                        : "text-slate-500 hover:bg-emerald-50 hover:text-emerald-600"
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                        : "text-slate-500 hover:bg-blue-50 hover:text-blue-600"
                     }`}
                   >
-                    <Icon />
+                    <Icon className="h-5 w-5" />
                     {item.name}
                   </Link>
                 );
@@ -300,32 +105,47 @@ export default function OfficerLayout({ children }: { children: ReactNode }) {
               onClick={handleLogout}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 px-4 py-3 text-sm font-black text-red-600 transition hover:bg-red-100"
             >
-              <LogoutIcon />
+              <LuLogOut className="h-5 w-5" />
               Logout
             </button>
           </div>
         </aside>
 
         <div className="min-h-screen lg:pl-72">
-          <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
-            <div className="flex items-center gap-4">
+          <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/90 backdrop-blur-xl">
+            {/* Left Section: Menu + Page Title */}
+            <div className="flex flex-1 items-center gap-2 px-4 sm:px-6 lg:px-8">
               <button
                 onClick={() => setIsMobileOpen(true)}
                 className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-600 lg:hidden"
                 aria-label="Open sidebar"
               >
-                <MenuIcon />
+                <LuMenu className="h-5 w-5" />
               </button>
+
+              <PageTitleBar />
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="relative hidden h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-500 sm:flex">
-                🔔
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-600" />
+            {/* Right Section: User Info + Profile + Notifications */}
+            <div className="flex items-center gap-2 px-4 sm:px-6 lg:px-13">
+              {/* User Name and Role */}
+              <div className="hidden sm:flex flex-col items-end">
+                <p className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                  {user?.firstName || "Officer"} Profile
+                </p>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Officer
+                </p>
               </div>
 
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-sm font-black text-white">
+              {/* Profile Badge */}
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white">
                 {user?.firstName?.[0] || "O"}
+              </div>
+
+              {/* Notification Dropdown */}
+              <div className="hidden sm:block">
+                <NotificationDropdown />
               </div>
             </div>
           </header>

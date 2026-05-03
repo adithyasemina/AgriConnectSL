@@ -135,15 +135,6 @@ export default function ChatPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight text-slate-900">
-          Chat Support
-        </h1>
-        <p className="mt-2 text-sm font-medium text-slate-500">
-          Connect with AI assistance or chat with our officers
-        </p>
-      </div>
-
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col h-[600px]">
         {/* Tabs */}
         <div className="flex border-b border-slate-200 bg-slate-50">
@@ -151,7 +142,7 @@ export default function ChatPage() {
             onClick={() => setActiveTab("bot")}
             className={`flex-1 px-6 py-4 text-sm font-bold transition ${
               activeTab === "bot"
-                ? "border-b-2 border-emerald-600 text-emerald-600 bg-white"
+                ? "border-b-2 border-blue-600 text-blue-600 bg-white"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -161,7 +152,7 @@ export default function ChatPage() {
             onClick={() => setActiveTab("officer")}
             className={`flex-1 px-6 py-4 text-sm font-bold transition ${
               activeTab === "officer"
-                ? "border-b-2 border-emerald-600 text-emerald-600 bg-white"
+                ? "border-b-2 border-blue-600 text-blue-600 bg-white"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -181,7 +172,7 @@ export default function ChatPage() {
               <div
                 className={`max-w-xs lg:max-w-md rounded-2xl px-4 py-3 ${
                   message.sender === "farmer"
-                    ? "bg-emerald-600 text-white"
+                    ? "bg-blue-600 text-white"
                     : "bg-slate-100 text-slate-900"
                 }`}
               >
@@ -209,11 +200,11 @@ export default function ChatPage() {
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
               rows={3}
-              className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 resize-none"
+              className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
             />
             <button
               onClick={handleSendMessage}
-              className="rounded-2xl bg-emerald-600 px-6 py-3 text-white font-black hover:bg-emerald-700 flex items-center justify-center min-w-fit transition"
+              className="rounded-2xl bg-blue-600 px-6 py-3 text-white font-black hover:bg-blue-700 flex items-center justify-center min-w-fit transition"
             >
               <SendIcon />
             </button>

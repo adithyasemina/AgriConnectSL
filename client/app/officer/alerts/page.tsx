@@ -127,15 +127,7 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight text-slate-900">
-          Send Alerts
-        </h1>
-        <p className="mt-2 text-sm font-medium text-slate-500">
-          Send notifications to farmers in specific districts
-        </p>
-      </div>
+    <div className="space-y-6 p-4 sm:p-6 lg:p-2">
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
@@ -151,7 +143,7 @@ export default function AlertsPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g., Heavy Rain Warning"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
             </div>
 
@@ -163,7 +155,7 @@ export default function AlertsPage() {
                 <select
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 >
                   <option value="">Select district...</option>
                   <option>Colombo</option>
@@ -183,7 +175,7 @@ export default function AlertsPage() {
                   onChange={(e) =>
                     setPriority(e.target.value as "Low" | "Medium" | "High")
                   }
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 >
                   <option>Low</option>
                   <option>Medium</option>
@@ -201,13 +193,13 @@ export default function AlertsPage() {
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Write your alert message..."
                 rows={5}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-black text-white hover:bg-emerald-700 flex items-center justify-center gap-2"
+              className="w-full rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white hover:bg-blue-700 flex items-center justify-center gap-2"
             >
               <SendIcon />
               Send Alert
@@ -235,11 +227,11 @@ export default function AlertsPage() {
       </div>
 
       {sentMessage && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex gap-3">
-          <CheckCircleIcon className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 flex gap-3">
+          <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0" />
           <div>
-            <p className="font-bold text-emerald-900">Alert sent successfully!</p>
-            <p className="text-sm text-emerald-700">
+            <p className="font-bold text-blue-900">Alert sent successfully!</p>
+            <p className="text-sm text-blue-700">
               The alert has been delivered to all farmers in the selected district.
             </p>
           </div>

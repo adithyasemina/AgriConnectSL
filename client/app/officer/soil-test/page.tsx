@@ -156,15 +156,7 @@ export default function SoilTestPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight text-slate-900">
-          Soil Test Reports
-        </h1>
-        <p className="mt-2 text-sm font-medium text-slate-500">
-          Send soil test results and recommendations to farmers
-        </p>
-      </div>
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
@@ -180,7 +172,7 @@ export default function SoilTestPage() {
               <select
                 value={selectedFarmer}
                 onChange={(e) => setSelectedFarmer(e.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               >
                 <option value="">Choose farmer...</option>
                 {sampleFarmers.map((farmer) => (
@@ -201,7 +193,7 @@ export default function SoilTestPage() {
                 value={soilPH}
                 onChange={(e) => setSoilPH(e.target.value)}
                 placeholder="e.g., 6.5"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
             </div>
 
@@ -213,7 +205,7 @@ export default function SoilTestPage() {
                 <select
                   value={nitrogen}
                   onChange={(e) => setNitrogen(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 >
                   <option>Low</option>
                   <option>Medium</option>
@@ -228,7 +220,7 @@ export default function SoilTestPage() {
                 <select
                   value={phosphorus}
                   onChange={(e) => setPhosphorus(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 >
                   <option>Low</option>
                   <option>Medium</option>
@@ -243,7 +235,7 @@ export default function SoilTestPage() {
                 <select
                   value={potassium}
                   onChange={(e) => setPotassium(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 >
                   <option>Low</option>
                   <option>Medium</option>
@@ -259,7 +251,7 @@ export default function SoilTestPage() {
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               >
                 <option>Good</option>
                 <option>Moderate</option>
@@ -276,13 +268,13 @@ export default function SoilTestPage() {
                 onChange={(e) => setRecommendation(e.target.value)}
                 placeholder="Provide recommendations based on soil test results..."
                 rows={5}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 resize-none"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-black text-white hover:bg-emerald-700 flex items-center justify-center gap-2"
+              className="w-full rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white hover:bg-blue-700 flex items-center justify-center gap-2"
             >
               <SendIcon />
               Send Soil Report Notification
@@ -316,11 +308,11 @@ export default function SoilTestPage() {
       </div>
 
       {sentMessage && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex gap-3">
-          <CheckCircleIcon className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 flex gap-3">
+          <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0" />
           <div>
-            <p className="font-bold text-emerald-900">Report sent successfully!</p>
-            <p className="text-sm text-emerald-700">
+            <p className="font-bold text-blue-900">Report sent successfully!</p>
+            <p className="text-sm text-blue-700">
               The soil test report has been sent to the farmer.
             </p>
           </div>
@@ -341,7 +333,7 @@ export default function SoilTestPage() {
               <div className="mb-3 flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                    <BeakerIcon className="h-4 w-4 text-emerald-600" />
+                    <BeakerIcon className="h-4 w-4 text-blue-600" />
                     {test.farmerName}
                   </h3>
                   <p className="text-sm text-slate-500 mt-1">
@@ -351,7 +343,7 @@ export default function SoilTestPage() {
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
                     test.status === "Good"
-                      ? "bg-emerald-100 text-emerald-700"
+                      ? "bg-blue-100 text-blue-700"
                       : test.status === "Moderate"
                       ? "bg-yellow-100 text-yellow-700"
                       : "bg-red-100 text-red-700"

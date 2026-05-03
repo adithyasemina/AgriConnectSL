@@ -1,3 +1,8 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import axios from "axios";
+
 function StatIcon({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/15 text-white">
@@ -106,8 +111,8 @@ function ChartLine() {
     <svg viewBox="0 0 700 260" className="h-full w-full">
       <defs>
         <linearGradient id="officerLineFill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#059669" stopOpacity="0.18" />
-          <stop offset="100%" stopColor="#059669" stopOpacity="0" />
+          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
         </linearGradient>
       </defs>
 
@@ -119,7 +124,7 @@ function ChartLine() {
       <path
         d="M40 210 C115 190 150 198 210 165 C280 128 320 150 390 112 C460 72 515 95 570 62 C625 34 655 48 680 36"
         fill="none"
-        stroke="#059669"
+        stroke="#2563eb"
         strokeWidth="4"
         strokeLinecap="round"
       />
@@ -167,9 +172,29 @@ const recentRequests = [
 ];
 
 export default function OfficerDashboardPage() {
+  const [totalFarmers, setTotalFarmers] = useState(0);
+
+  useEffect(() => {
+    const fetchFarmerCount = async () => {
+      try {
+        const [activeRes, blockedRes] = await Promise.all([
+          axios.get("/api/officer/farmers/unblocked"),
+          axios.get("/api/officer/farmers/blocked"),
+        ]);
+        const total = (activeRes.data.farmers?.length || 0) + (blockedRes.data.farmers?.length || 0);
+        setTotalFarmers(total);
+      } catch (error) {
+        console.error("Failed to fetch farmer count:", error);
+        setTotalFarmers(0);
+      }
+    };
+
+    fetchFarmerCount();
+  }, []);
+
   return (
-    <div className="space-y-6">
-      <section className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-600 via-emerald-500 to-cyan-500 p-6 text-white shadow-xl shadow-emerald-600/20 sm:p-8">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+      <section className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 p-6 text-white shadow-xl shadow-blue-600/20 sm:p-8">
         <div>
           <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
             Good morning, Officer
@@ -183,7 +208,7 @@ export default function OfficerDashboardPage() {
           <HeroStat
             icon={<FarmersIcon />}
             label="Total Farmers"
-            value="120"
+            value={String(totalFarmers)}
             change="+8.4% this month"
           />
           <HeroStat
@@ -256,17 +281,17 @@ export default function OfficerDashboardPage() {
                 </p>
               </div>
 
-              <button className="text-xs font-black text-emerald-600">
+              <button className="text-xs font-black text-blue-600">
                 View board ↗
               </button>
             </div>
 
             <div className="mt-7 h-3 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full w-[68%] rounded-full bg-emerald-600" />
+              <div className="h-full w-[68%] rounded-full bg-blue-600" />
             </div>
 
             <div className="mt-5 grid gap-3 text-xs font-bold text-slate-500 sm:grid-cols-3">
-              <ProgressLabel dot="bg-emerald-600" text="Done (18)" />
+              <ProgressLabel dot="bg-blue-600" text="Done (18)" />
               <ProgressLabel dot="bg-slate-400" text="Review (8)" />
               <ProgressLabel dot="bg-slate-300" text="Pending (6)" />
             </div>
@@ -283,7 +308,7 @@ export default function OfficerDashboardPage() {
                 </p>
               </div>
 
-              <button className="text-xs font-black text-emerald-600">
+              <button className="text-xs font-black text-blue-600">
                 View all ↗
               </button>
             </div>
@@ -294,7 +319,7 @@ export default function OfficerDashboardPage() {
                   key={item.name + item.time}
                   className="flex items-center gap-3"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-black text-white">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">
                     {item.initials}
                   </div>
 

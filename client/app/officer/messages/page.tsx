@@ -163,15 +163,7 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight text-slate-900">
-          Messages
-        </h1>
-        <p className="mt-2 text-sm font-medium text-slate-500">
-          Communicate with farmers
-        </p>
-      </div>
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col lg:flex-row h-[600px]">
         {/* Farmer List */}
@@ -184,7 +176,7 @@ export default function MessagesPage() {
                 placeholder="Search farmers..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
             </div>
           </div>
@@ -195,10 +187,10 @@ export default function MessagesPage() {
                 key={farmer.id}
                 onClick={() => setSelectedFarmerId(farmer.id)}
                 className={`w-full px-4 py-3 text-left border-b border-slate-100 hover:bg-slate-50 transition ${
-                  selectedFarmerId === farmer.id ? "bg-emerald-50" : ""
+                  selectedFarmerId === farmer.id ? "bg-blue-50" : ""
                 }`}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-sm font-black text-white mb-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-black text-white mb-2">
                   {farmer.name.charAt(0)}
                 </div>
                 <p className="font-bold text-slate-900 text-sm">{farmer.name}</p>
@@ -232,7 +224,7 @@ export default function MessagesPage() {
                     <div
                       className={`max-w-xs lg:max-w-md rounded-2xl px-4 py-3 ${
                         msg.sender === "officer"
-                          ? "bg-emerald-600 text-white"
+                          ? "bg-blue-600 text-white"
                           : "bg-slate-100 text-slate-900"
                       }`}
                     >
@@ -259,11 +251,11 @@ export default function MessagesPage() {
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder="Type your reply..."
                     rows={3}
-                    className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 resize-none"
+                    className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
                   />
                   <button
                     onClick={handleSendReply}
-                    className="rounded-2xl bg-emerald-600 px-6 py-3 text-white font-black hover:bg-emerald-700 flex items-center justify-center min-w-fit"
+                    className="rounded-2xl bg-blue-600 px-6 py-3 text-white font-black hover:bg-blue-700 flex items-center justify-center min-w-fit"
                   >
                     <SendIcon />
                   </button>

@@ -116,15 +116,6 @@ export default function FindDiseasePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight text-slate-900">
-          Find Paddy Disease
-        </h1>
-        <p className="mt-2 text-sm font-medium text-slate-500">
-          Upload a paddy leaf image to check for possible diseases
-        </p>
-      </div>
-
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Upload Section */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -134,8 +125,8 @@ export default function FindDiseasePage() {
 
           {!image ? (
             <label className="block">
-              <div className="cursor-pointer rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50 px-6 py-12 text-center transition hover:bg-emerald-100">
-                <UploadIcon className="mx-auto mb-4 h-10 w-10 text-emerald-600" />
+              <div className="cursor-pointer rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50 px-6 py-12 text-center transition hover:bg-blue-100">
+                <UploadIcon className="mx-auto mb-4 h-10 w-10 text-blue-600" />
                 <p className="text-sm font-bold text-slate-900">
                   Click to upload or drag and drop
                 </p>
@@ -171,7 +162,7 @@ export default function FindDiseasePage() {
                 <button
                   onClick={handleAnalyze}
                   disabled={isAnalyzing}
-                  className="flex-1 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white hover:bg-emerald-700 disabled:opacity-50"
+                  className="flex-1 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50"
                 >
                   {isAnalyzing ? "Analyzing..." : "Analyze Disease"}
                 </button>
@@ -193,7 +184,7 @@ export default function FindDiseasePage() {
             <>
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="flex items-start gap-4">
-                  <CheckCircleIcon className="h-6 w-6 flex-shrink-0 text-emerald-600" />
+                  <CheckCircleIcon className="h-6 w-6 flex-shrink-0 text-blue-600" />
                   <div>
                     <h3 className="text-lg font-black text-slate-900">
                       {result.disease}
@@ -205,18 +196,18 @@ export default function FindDiseasePage() {
                 </div>
 
                 <div className="mt-6 space-y-4 border-t border-slate-100 pt-6">
-                  <div className="rounded-lg bg-gradient-to-r from-emerald-50 to-cyan-50 p-4">
+                  <div className="rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 p-4">
                     <p className="text-sm font-semibold text-slate-600">
                       Confidence Score
                     </p>
                     <div className="mt-2 flex items-end gap-3">
-                      <p className="text-3xl font-black text-emerald-600">
+                      <p className="text-3xl font-black text-blue-600">
                         {result.confidence}%
                       </p>
                       <div className="flex-1">
                         <div className="h-2 rounded-full bg-slate-200">
                           <div
-                            className="h-full rounded-full bg-emerald-600"
+                            className="h-full rounded-full bg-blue-600"
                             style={{ width: `${result.confidence}%` }}
                           />
                         </div>
@@ -234,7 +225,7 @@ export default function FindDiseasePage() {
                       key={symptom}
                       className="flex gap-3 rounded-lg bg-slate-50 p-3"
                     >
-                      <CheckCircleIcon className="h-5 w-5 flex-shrink-0 text-emerald-600" />
+                      <CheckCircleIcon className="h-5 w-5 flex-shrink-0 text-blue-600" />
                       <span className="text-sm text-slate-700">{symptom}</span>
                     </li>
                   ))}
@@ -243,7 +234,7 @@ export default function FindDiseasePage() {
 
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
-                  <AlertIcon className="h-5 w-5 text-emerald-600" />
+                  <AlertIcon className="h-5 w-5 text-blue-600" />
                   <h3 className="text-lg font-black text-slate-900">
                     Recommendations
                   </h3>
@@ -252,9 +243,9 @@ export default function FindDiseasePage() {
                   {result.recommendations.map((rec) => (
                     <li
                       key={rec}
-                      className="flex gap-3 rounded-lg bg-emerald-50 p-3"
+                      className="flex gap-3 rounded-lg bg-blue-50 p-3"
                     >
-                      <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
+                      <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
                         ✓
                       </span>
                       <span className="text-sm text-slate-700">{rec}</span>
@@ -271,19 +262,19 @@ export default function FindDiseasePage() {
               </p>
               <ul className="mt-4 space-y-2">
                 <li className="flex gap-3 text-sm text-slate-600">
-                  <CheckCircleIcon className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                  <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0" />
                   Disease identification
                 </li>
                 <li className="flex gap-3 text-sm text-slate-600">
-                  <CheckCircleIcon className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                  <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0" />
                   Confidence score
                 </li>
                 <li className="flex gap-3 text-sm text-slate-600">
-                  <CheckCircleIcon className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                  <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0" />
                   Key symptoms
                 </li>
                 <li className="flex gap-3 text-sm text-slate-600">
-                  <CheckCircleIcon className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                  <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0" />
                   Treatment recommendations
                 </li>
               </ul>

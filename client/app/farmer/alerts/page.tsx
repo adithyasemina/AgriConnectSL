@@ -115,23 +115,14 @@ export default function AlertsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-black tracking-tight text-slate-900">
-          Farmer Alerts
-        </h1>
-        <p className="mt-2 text-sm font-medium text-slate-500">
-          Regional notifications and updates from your officers
-        </p>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <button
           onClick={() => setFilter("All")}
           className={`px-4 py-2 rounded-full text-sm font-bold transition ${
             filter === "All"
-              ? "bg-emerald-600 text-white"
-              : "bg-white border border-slate-200 text-slate-600 hover:border-emerald-600 hover:text-emerald-600"
+              ? "bg-blue-600 text-white"
+              : "bg-white border border-slate-200 text-slate-600 hover:border-blue-600 hover:text-blue-600"
           }`}
         >
           All ({sampleAlerts.length})
@@ -208,7 +199,7 @@ export default function AlertsPage() {
               </div>
 
               <div className="mt-4 border-t border-slate-100 pt-3">
-                <button className="text-xs font-black text-emerald-600 hover:text-emerald-700 transition">
+                <button className="text-xs font-black text-blue-600 hover:text-blue-700 transition">
                   Read Full Alert →
                 </button>
               </div>
@@ -223,9 +214,9 @@ export default function AlertsPage() {
       </div>
 
       {/* Info Card */}
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-        <h3 className="font-black text-emerald-900">📢 How Alerts Work</h3>
-        <ul className="mt-3 space-y-2 text-sm text-emerald-800">
+      <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6">
+        <h3 className="font-black text-blue-900">📢 How Alerts Work</h3>
+        <ul className="mt-3 space-y-2 text-sm text-blue-800">
           <li>✓ Officers send alerts about weather, pests, diseases, and market updates</li>
           <li>✓ High Priority alerts need immediate attention for your safety</li>
           <li>✓ Medium alerts are recommended actions for better crop health</li>

@@ -151,7 +151,7 @@ const recentAlerts = [
 export default function FarmerDashboardPage() {
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-600 via-emerald-500 to-cyan-500 p-6 text-white shadow-xl shadow-emerald-600/20 sm:p-8">
+      <section className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 p-6 text-white shadow-xl shadow-blue-600/20 sm:p-8">
         <div>
           <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
             Welcome back, Farmer
@@ -201,7 +201,7 @@ export default function FarmerDashboardPage() {
               </p>
             </div>
 
-            <button className="text-xs font-black text-emerald-600 hover:text-emerald-700">
+            <button className="text-xs font-black text-blue-600 hover:text-blue-700">
               View all ↗
             </button>
           </div>
@@ -213,7 +213,7 @@ export default function FarmerDashboardPage() {
                 className="flex items-center justify-between rounded-2xl border border-slate-100 p-4 hover:bg-slate-50"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-black text-white">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">
                     {check.initials[0]}
                   </div>
 
@@ -251,7 +251,7 @@ export default function FarmerDashboardPage() {
               </div>
             </div>
 
-            <button className="mt-5 w-full rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white hover:bg-emerald-700 transition">
+            <button className="mt-5 w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700 transition">
               Open Chat
             </button>
           </div>
@@ -267,7 +267,7 @@ export default function FarmerDashboardPage() {
                 </p>
               </div>
 
-              <button className="text-xs font-black text-emerald-600 hover:text-emerald-700">
+              <button className="text-xs font-black text-blue-600 hover:text-blue-700">
                 View all ↗
               </button>
             </div>
