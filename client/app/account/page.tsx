@@ -481,7 +481,7 @@ export default function AuthPage() {
             }`}
           >
             <div
-              className={`absolute left-0 top-0 flex h-full w-1/2 flex-col items-start justify-end bg-[linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6)),url('/images/signin.jpeg')] bg-cover bg-center px-12 pb-25 text-left transition-all duration-700 md:w-[60%] lg:px-24 ${
+              className={`absolute left-0 top-0 flex h-full w-1/2 flex-col items-start justify-end bg-[linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.3)),url('/images/hero4.jpg')] bg-cover bg-center px-12 pb-25 text-left transition-all duration-700 md:w-[60%] lg:px-24 ${
                 isRightPanelActive ? "z-20 opacity-100" : "z-10 opacity-0"
               }`}
             >
@@ -502,7 +502,7 @@ export default function AuthPage() {
             </div>
 
             <div
-              className={`absolute right-0 top-0 flex h-full w-1/2 flex-col items-end justify-end bg-[linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6)),url('/images/signup.png')] bg-cover bg-center px-12 pb-25 text-right transition-all duration-700 md:w-[60%] lg:px-24 ${
+              className={`absolute right-0 top-0 flex h-full w-1/2 flex-col items-end justify-end bg-[linear-gradient(rgba(0,0,0,0.2),rgba(0,0,0,0.3)),url('/images/hero1.png')] bg-cover bg-center px-12 pb-25 text-right transition-all duration-700 md:w-[60%] lg:px-24 ${
                 isRightPanelActive ? "z-10 opacity-0" : "z-20 opacity-100"
               }`}
             >
