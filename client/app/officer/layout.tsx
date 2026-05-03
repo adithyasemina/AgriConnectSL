@@ -23,9 +23,9 @@ const menuItems = [
   { name: "Dashboard", href: "/officer", icon: LuLayoutDashboard },
   { name: "Farmers", href: "/officer/farmers", icon: LuUsers },
   { name: "Alerts", href: "/officer/alerts", icon: LuBell },
+    { name: "Soil Test", href: "/officer/soil-test", icon: LuFlaskConical },
   { name: "Messages", href: "/officer/messages", icon: LuMessageCircle },
   { name: "Articles", href: "/officer/articles", icon: LuNewspaper },
-  { name: "Soil Test", href: "/officer/soil-test", icon: LuFlaskConical },
 ];
 
 export default function OfficerLayout({ children }: { children: ReactNode }) {

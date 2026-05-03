@@ -4,7 +4,8 @@
       "Bash(npx next *)",
       "Bash(npm install *)",
       "Bash(find /c/Users/semin/Desktop/Project*/client -name \"*PageHeader*\" -o -name \"*Header*\")",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(node -c index.js)"
     ]
   }
 }

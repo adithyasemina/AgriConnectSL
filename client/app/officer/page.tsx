@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 
 function StatIcon({ children }: { children: React.ReactNode }) {
   return (
@@ -173,23 +173,29 @@ const recentRequests = [
 
 export default function OfficerDashboardPage() {
   const [totalFarmers, setTotalFarmers] = useState(0);
+  const [totalMessages, setTotalMessages] = useState(0);
+  const [totalSoilTests, setTotalSoilTests] = useState(0);
+  const [totalArticles, setTotalArticles] = useState(0);
 
   useEffect(() => {
-    const fetchFarmerCount = async () => {
+    const fetchDashboardStats = async () => {
       try {
-        const [activeRes, blockedRes] = await Promise.all([
-          axios.get("/api/officer/farmers/unblocked"),
-          axios.get("/api/officer/farmers/blocked"),
-        ]);
-        const total = (activeRes.data.farmers?.length || 0) + (blockedRes.data.farmers?.length || 0);
-        setTotalFarmers(total);
+        const res = await api.get("/api/officer/dashboard-stats");
+        const stats = res.data.stats || {};
+        setTotalFarmers(stats.totalFarmers || 0);
+        setTotalMessages(stats.totalMessages || 0);
+        setTotalSoilTests(stats.totalSoilTests || 0);
+        setTotalArticles(stats.totalArticles || 0);
       } catch (error) {
-        console.error("Failed to fetch farmer count:", error);
+        console.error("Failed to fetch dashboard stats:", error);
         setTotalFarmers(0);
+        setTotalMessages(0);
+        setTotalSoilTests(0);
+        setTotalArticles(0);
       }
     };
 
-    fetchFarmerCount();
+    fetchDashboardStats();
   }, []);
 
   return (
@@ -214,19 +220,19 @@ export default function OfficerDashboardPage() {
           <HeroStat
             icon={<ActivityIcon />}
             label="Total Messages"
-            value="48"
+            value={String(totalMessages)}
             change="+5.2% this week"
           />
           <HeroStat
             icon={<ReportIcon />}
             label="Soil Tests"
-            value="32"
+            value={String(totalSoilTests)}
             change="+18 tests completed"
           />
           <HeroStat
             icon={<AppointmentIcon />}
             label="Articles"
-            value="15"
+            value={String(totalArticles)}
             change="Knowledge base"
           />
         </div>

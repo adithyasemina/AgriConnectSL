@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Alert = require("../models/Alert");
 
 exports.getUnblockedFarmers = async (req, res) => {
   try {
@@ -126,6 +127,107 @@ exports.unblockFarmer = async (req, res) => {
     console.error("Unblock farmer error:", error.message);
     return res.status(500).json({
       message: "Failed to unblock farmer",
+      error: error.message,
+    });
+  }
+};
+
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const totalFarmers = await User.countDocuments({
+      role: "farmer",
+      isBlocked: { $ne: true },
+    });
+
+    const blockedFarmers = await User.countDocuments({
+      role: "farmer",
+      isBlocked: true,
+    });
+
+    return res.status(200).json({
+      message: "Dashboard stats fetched successfully",
+      stats: {
+        totalFarmers,
+        blockedFarmers,
+        totalMessages: 48,
+        totalSoilTests: 32,
+        totalArticles: 15,
+      },
+    });
+  } catch (error) {
+    console.error("Get dashboard stats error:", error.message);
+    return res.status(500).json({
+      message: "Failed to fetch dashboard stats",
+      error: error.message,
+    });
+  }
+};
+
+exports.createAlert = async (req, res) => {
+  try {
+    const { title, message, priority, targetType, targetProvinces, targetDistricts } = req.body;
+
+    if (!title || !message || !priority || !targetType) {
+      return res.status(400).json({
+        message: "Title, message, priority, and targetType are required",
+      });
+    }
+
+    if (targetType === "provinces" && (!targetProvinces || targetProvinces.length === 0)) {
+      return res.status(400).json({
+        message: "At least one province must be selected for provinces targetType",
+      });
+    }
+
+    if (targetType === "districts" && (!targetDistricts || targetDistricts.length === 0)) {
+      return res.status(400).json({
+        message: "At least one district must be selected for districts targetType",
+      });
+    }
+
+    const createdByName = `${req.user.firstName} ${req.user.lastName}`;
+
+    const alert = new Alert({
+      title,
+      message,
+      priority,
+      targetType,
+      targetProvinces: targetType === "all" ? [] : targetProvinces || [],
+      targetDistricts: targetType === "districts" ? targetDistricts : [],
+      createdBy: req.user._id,
+      createdByName,
+      isActive: true,
+    });
+
+    await alert.save();
+
+    return res.status(201).json({
+      message: "Alert created successfully",
+      alert,
+    });
+  } catch (error) {
+    console.error("Create alert error:", error.message);
+    return res.status(500).json({
+      message: "Failed to create alert",
+      error: error.message,
+    });
+  }
+};
+
+exports.getOfficerAlerts = async (req, res) => {
+  try {
+    const alerts = await Alert.find()
+      .populate("createdBy", "-password")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      message: "Alerts retrieved successfully",
+      alerts,
+    });
+  } catch (error) {
+    console.error("Get alerts error:", error.message);
+    return res.status(500).json({
+      message: "Failed to retrieve alerts",
       error: error.message,
     });
   }
