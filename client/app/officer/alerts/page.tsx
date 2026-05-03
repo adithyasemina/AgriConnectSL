@@ -43,6 +43,7 @@ export default function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [officerFilter, setOfficerFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const ITEMS_PER_PAGE = 5;
 
@@ -145,6 +146,17 @@ export default function AlertsPage() {
     setSelectedDistricts([]);
   };
 
+  const getUniqueOfficers = () => {
+    const officers = new Set<string>();
+    alerts.forEach((alert) => {
+      const name = typeof alert.createdBy === "string"
+        ? alert.createdBy
+        : `${alert.createdBy.firstName} ${alert.createdBy.lastName}`;
+      officers.add(name);
+    });
+    return Array.from(officers).sort();
+  };
+
   const filteredAlerts = alerts.filter((alert) => {
     const searchLower = searchQuery.toLowerCase();
     const createdByName =
@@ -152,10 +164,12 @@ export default function AlertsPage() {
         ? alert.createdBy
         : `${alert.createdBy.firstName} ${alert.createdBy.lastName}`;
 
-    return (
-      alert.title.toLowerCase().includes(searchLower) ||
-      createdByName.toLowerCase().includes(searchLower)
-    );
+    const matchesSearch = alert.title.toLowerCase().includes(searchLower) ||
+      createdByName.toLowerCase().includes(searchLower);
+
+    const matchesOfficer = officerFilter === "" || createdByName === officerFilter;
+
+    return matchesSearch && matchesOfficer;
   });
 
   const paginatedAlerts = filteredAlerts.slice(
@@ -226,66 +240,85 @@ export default function AlertsPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-2">
-      {/* Search Bar */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4">
-        <div className="relative">
-          <LuSearch className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search alerts by title or created by..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(0);
-            }}
-            className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-          />
-        </div>
-      </div>
-
       {/* Alerts Table/Cards */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="p-6">
-          <h2 className="mb-6 text-lg font-black text-slate-900">
+      <div className="flex h-[540px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <div className="shrink-0 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          {/* Left Section: Title */}
+          <h2 className="text-lg font-black text-slate-900 flex-shrink-0">
             Recent Alerts ({filteredAlerts.length})
           </h2>
 
+          {/* Right Section: Filters and Search */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 sm:justify-end">
+            <select
+              value={officerFilter}
+              onChange={(e) => {
+                setOfficerFilter(e.target.value);
+                setCurrentPage(0);
+              }}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="">All Officers</option>
+              {getUniqueOfficers().map((officer) => (
+                <option key={officer} value={officer}>
+                  {officer}
+                </option>
+              ))}
+            </select>
+
+            {/* Search Bar */}
+            <div className="w-full sm:w-64 relative">
+              <LuSearch className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search alerts by title or created by..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(0);
+                }}
+                className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+          </div>
+        </div>
+
           {/* Desktop Table */}
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Alert Title
-                  </th>
-                  <th className="py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Created By
-                  </th>
-                  <th className="py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Time
-                  </th>
-                  <th className="py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Priority
-                  </th>
-                  <th className="py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedAlerts.length > 0 ? (
-                  paginatedAlerts.map((alert) => (
-                    <tr key={alert._id} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="py-4 px-4 text-sm font-bold text-slate-900">
+          <div className="hidden md:flex flex-col flex-1 overflow-hidden">
+            <div className="overflow-x-auto overflow-y-auto">
+              <table className="w-full table-fixed">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="w-[25%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                      Alert Title
+                    </th>
+                    <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                      Created By
+                    </th>
+                    <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                      Time
+                    </th>
+                    <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                      Priority
+                    </th>
+                    <th className="w-[15%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedAlerts.map((alert) => (
+                    <tr key={alert._id} className="border-b border-slate-100 hover:bg-slate-50 h-16">
+                      <td className="w-[25%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
                         {alert.title}
                       </td>
-                      <td className="py-4 px-4 text-sm text-slate-600">
+                      <td className="w-[20%] py-4 px-4 text-sm text-slate-600 truncate">
                         {getCreatedByName(alert)}
                       </td>
-                      <td className="py-4 px-4 text-sm text-slate-600">
+                      <td className="w-[20%] py-4 px-4 text-sm text-slate-600 truncate">
                         {formatDate(alert.createdAt)}
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="w-[20%] py-4 px-4">
                         <span
                           className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${getPriorityColor(
                             alert.priority
@@ -294,29 +327,32 @@ export default function AlertsPage() {
                           {alert.priority}
                         </span>
                       </td>
-                      <td className="py-4 px-4">
-                        <button
-                          onClick={() => {
-                            setSelectedAlert(alert);
-                            setViewModalOpen(true);
-                          }}
-                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
-                        >
-                          <LuEye className="h-4 w-4" />
-                        </button>
+                      <td className="w-[15%] py-4 px-4">
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => {
+                              setSelectedAlert(alert);
+                              setViewModalOpen(true);
+                            }}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50"
+                            title="View Alert"
+                          >
+                            <LuEye className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-slate-500">
-                      No alerts found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          {paginatedAlerts.length === 0 && (
+            <div className="flex-1 flex items-center justify-center text-slate-500">
+              <p className="text-sm">No alerts found</p>
+            </div>
+          )}
 
           {/* Mobile Cards */}
           <div className="space-y-4 md:hidden">
@@ -369,33 +405,30 @@ export default function AlertsPage() {
               </div>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
-          <button
-            onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-            disabled={currentPage === 0}
-            className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <LuChevronLeft className="h-4 w-4" />
-            Previous
-          </button>
-          <span className="text-sm font-bold text-slate-600">
-            Page {currentPage + 1} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-            disabled={currentPage >= totalPages - 1}
-            className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-            <LuChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="shrink-0 flex items-center justify-center gap-2 pt-6">
+              <button
+                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                disabled={currentPage === 0}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              >
+                <LuChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-xs font-bold text-slate-600">
+                Page {currentPage + 1} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                disabled={currentPage >= totalPages - 1}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              >
+                <LuChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+      </div>
 
       {/* Floating Action Button */}
       <button

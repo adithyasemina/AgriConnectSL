@@ -29,6 +29,20 @@ type Farmer = {
   createdAt?: string;
 };
 
+const locations = {
+  Western: ["Colombo", "Gampaha", "Kalutara"],
+  Central: ["Kandy", "Matale", "Nuwara Eliya"],
+  Southern: ["Galle", "Matara", "Hambantota"],
+  Northern: ["Jaffna", "Kilinochchi", "Mannar", "Mullaitivu", "Vavuniya"],
+  Eastern: ["Trincomalee", "Batticaloa", "Ampara"],
+  "North Western": ["Kurunegala", "Puttalam"],
+  "North Central": ["Anuradhapura", "Polonnaruwa"],
+  Uva: ["Badulla", "Monaragala"],
+  Sabaragamuwa: ["Ratnapura", "Kegalle"],
+} as const;
+
+const allDistricts = Object.values(locations).flat().sort();
+
 export default function FarmersPage() {
   const [unblockedFarmers, setUnblockedFarmers] = useState<Farmer[]>([]);
   const [blockedFarmers, setBlockedFarmers] = useState<Farmer[]>([]);
@@ -59,8 +73,13 @@ export default function FarmersPage() {
   const [blockedDistrictFilter, setBlockedDistrictFilter] = useState("");
   const ITEMS_PER_PAGE = 5;
 
-  const provinces = ["Western", "Central", "Southern", "Northern", "Eastern", "North Western", "North Central", "Uva", "Sabaragamuwa"];
-  const districts = ["Colombo", "Kandy", "Galle", "Anuradhapura", "Batticaloa", "Jaffna", "Ratnapura", "Matara", "Trincomalee", "Kurunegala"];
+  const provinces = Object.keys(locations) as Array<keyof typeof locations>;
+
+  const getAvailableDistricts = (province: string): string[] => {
+    if (province === "") return allDistricts;
+    const provinceKey = province as keyof typeof locations;
+    return [...(locations[provinceKey] || [])];
+  };
 
   useEffect(() => {
     fetchFarmers();
@@ -179,56 +198,74 @@ export default function FarmersPage() {
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-2">
       {/* Unblocked Farmers Section */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex h-[560px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <div className="shrink-0 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           {/* Left Section: Title and Count */}
-          <div className="flex items-center gap-3 min-w-fit">
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-slate-900">
-                  Active Farmers
-                </h2>
-                <span className="h-3 w-3 rounded-full bg-green-500 flex-shrink-0" />
-              </div>
-              <p className="text-sm font-medium text-slate-500">
-                {filteredUnblocked.length} farmers
+          <div className="flex items-center ml-4 gap-3 min-w-fit">
+            <div className="flex flex-col">
+              <h2 className="text-lg font-black text-slate-900">
+                ACTIVE FARMERS
+              </h2>
+              <p className="text-sm font-medium text-slate-500 flex items-center gap-1">
+                {filteredUnblocked.length} FARMERS
+                <span className="h-3 w-3 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
               </p>
             </div>
           </div>
 
           {/* Right Section: Filters and Search */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 sm:justify-end">
-            <select
-              value={activeProvinceFilter}
-              onChange={(e) => {
-                setActiveProvinceFilter(e.target.value);
-                setUnblockedPage(0);
-              }}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-            >
-              <option value="">All Provinces</option>
-              {provinces.map((province) => (
-                <option key={province} value={province}>
-                  {province}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={activeDistrictFilter}
-              onChange={(e) => {
-                setActiveDistrictFilter(e.target.value);
-                setUnblockedPage(0);
-              }}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-            >
-              <option value="">All Districts</option>
-              {districts.map((district) => (
-                <option key={district} value={district}>
-                  {district}
-                </option>
-              ))}
-            </select>
+            <div className="relative inline-block">
+              <select
+                value={activeProvinceFilter}
+                onChange={(e) => {
+                  const newProvince = e.target.value;
+                  setActiveProvinceFilter(newProvince);
+                  const availableDistricts = getAvailableDistricts(newProvince);
+                  if (activeDistrictFilter && !availableDistricts.includes(activeDistrictFilter)) {
+                    setActiveDistrictFilter("");
+                  }
+                  setUnblockedPage(0);
+                }}
+                className="appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-10 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">All Provinces</option>
+                {provinces.map((province) => (
+                  <option key={province} value={province}>
+                    {province}
+                  </option>
+                ))}
+              </select>
+              {/* Province ඊතලය */}
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+            <div className="relative inline-block">
+              <select
+                value={activeDistrictFilter}
+                onChange={(e) => {
+                  setActiveDistrictFilter(e.target.value);
+                  setUnblockedPage(0);
+                }}
+                className="appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-10 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">All Districts</option>
+                {getAvailableDistricts(activeProvinceFilter).map((district) => (
+                  <option key={district} value={district}>
+                    {district}
+                  </option>
+                ))}
+              </select>
+              {/* District ඊතලය */}
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
 
             <div className="w-full sm:w-64 relative">
               <LuSearch className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
@@ -247,78 +284,80 @@ export default function FarmersPage() {
         </div>
 
         {/* Desktop Table */}
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full table-fixed">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                  Farmer Name
-                </th>
-                <th className="w-[28%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                  Email
-                </th>
-                <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                  Province
-                </th>
-                <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                  District
-                </th>
-                <th className="w-[16%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                  Registered Date
-                </th>
-                <th className="w-[10%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedUnblocked.map((farmer) => (
-                <tr
-                  key={farmer._id}
-                  className="border-b border-slate-100 hover:bg-slate-50"
-                >
-                  <td className="w-[18%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
-                    {farmer.firstName} {farmer.lastName}
-                  </td>
-                  <td className="w-[28%] py-4 px-4 text-sm text-slate-600 truncate">
-                    {farmer.email}
-                  </td>
-                  <td className="w-[14%] py-4 px-4 text-sm text-slate-600 truncate">
-                    {farmer.province || "-"}
-                  </td>
-                  <td className="w-[14%] py-4 px-4 text-sm text-slate-600 truncate">
-                    {farmer.district || "-"}
-                  </td>
-                  <td className="w-[16%] py-4 px-4 text-sm text-slate-600 truncate">
-                    {farmer.createdAt
-                      ? new Date(farmer.createdAt).toLocaleDateString()
-                      : "-"}
-                  </td>
-                  <td className="w-[10%] py-4 px-4">
-                    <div className="flex justify-center gap-2">
-                      <button
-                        onClick={() => {
-                          setSelectedFarmer(farmer);
-                          setProfileModalOpen(true);
-                        }}
-                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50"
-                        title="View Profile"
-                      >
-                        <LuEye className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleBlockClick(farmer)}
-                        className="rounded-lg bg-red-50 px-3 py-2 text-red-600 hover:bg-red-100"
-                        title="Block Farmer"
-                      >
-                        <LuBan className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+        <div className="hidden md:flex flex-col flex-1 overflow-hidden">
+          <div className="overflow-x-auto overflow-y-auto">
+            <table className="w-full table-fixed">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    Farmer Name
+                  </th>
+                  <th className="w-[24%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    Email
+                  </th>
+                  <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    Province
+                  </th>
+                  <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    District
+                  </th>
+                  <th className="w-[16%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    Registered Date
+                  </th>
+                  <th className="w-[12%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
+                    Action
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginatedUnblocked.map((farmer) => (
+                  <tr
+                    key={farmer._id}
+                    className="border-b border-slate-100 hover:bg-slate-50 h-16"
+                  >
+                    <td className="w-[18%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
+                      {farmer.firstName} {farmer.lastName}
+                    </td>
+                    <td className="w-[28%] py-4 px-4 text-sm text-slate-600 truncate">
+                      {farmer.email}
+                    </td>
+                    <td className="w-[14%] py-4 px-4 text-sm text-slate-600 truncate">
+                      {farmer.province || "-"}
+                    </td>
+                    <td className="w-[14%] py-4 px-4 text-sm text-slate-600 truncate">
+                      {farmer.district || "-"}
+                    </td>
+                    <td className="w-[16%] py-4 px-4 text-sm text-slate-600 truncate">
+                      {farmer.createdAt
+                        ? new Date(farmer.createdAt).toLocaleDateString()
+                        : "-"}
+                    </td>
+                    <td className="w-[10%] py-4 px-4">
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedFarmer(farmer);
+                            setProfileModalOpen(true);
+                          }}
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50"
+                          title="View Profile"
+                        >
+                          <LuEye className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleBlockClick(farmer)}
+                          className="rounded-lg bg-red-50 px-3 py-2 text-red-600 hover:bg-red-100"
+                          title="Block Farmer"
+                        >
+                          <LuBan className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Mobile Cards */}
@@ -383,14 +422,14 @@ export default function FarmersPage() {
         </div>
 
         {paginatedUnblocked.length === 0 && (
-          <div className="py-8 text-center text-slate-500">
+          <div className="flex-1 flex items-center justify-center lg:-mt-100 -mt-0 text-slate-500">
             <p className="text-sm">No active farmers found</p>
           </div>
         )}
 
         {/* Pagination */}
         {unblockedPages > 0 && (
-          <div className="mt-6 flex items-center justify-center gap-2 border-t border-slate-100 pt-6">
+          <div className="shrink-0 flex items-center justify-center gap-2 pt-6">
             <button
               onClick={() =>
                 setUnblockedPage((p) => Math.max(0, p - 1))
@@ -401,7 +440,7 @@ export default function FarmersPage() {
               <LuChevronLeft className="h-4 w-4" />
             </button>
             <span className="text-xs font-bold text-slate-600">
-              Page {unblockedPage + 1} of {unblockedPages || 1}
+              Pages {unblockedPage + 1} of {unblockedPages || 1}
             </span>
             <button
               onClick={() =>
@@ -419,56 +458,77 @@ export default function FarmersPage() {
       </div>
 
       {/* Blocked Farmers Section */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex h-[560px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">        <div className="shrink-0 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           {/* Left Section: Title and Count */}
-          <div className="flex items-center gap-3 min-w-fit">
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 ml-4 min-w-fit">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 ">
                 <h2 className="text-lg font-black text-slate-900">
-                  Blocked Farmers
+                  BLOCKED FARMERS
                 </h2>
-                <span className="h-3 w-3 rounded-full bg-red-500 flex-shrink-0" />
               </div>
-              <p className="text-sm font-medium text-slate-500">
-                {filteredBlocked.length} farmers
+              <p className="text-sm font-medium text-slate-500 flex items-center gap-1">
+                {filteredBlocked.length} FARMERS
+                <span className="h-3 w-3 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
               </p>
             </div>
           </div>
 
           {/* Right Section: Filters and Search */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 sm:justify-end">
-            <select
-              value={blockedProvinceFilter}
-              onChange={(e) => {
-                setBlockedProvinceFilter(e.target.value);
-                setBlockedPage(0);
-              }}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-            >
-              <option value="">All Provinces</option>
-              {provinces.map((province) => (
-                <option key={province} value={province}>
-                  {province}
-                </option>
-              ))}
-            </select>
+            <div className="relative inline-block">
+              <select
+                value={blockedProvinceFilter}
+                onChange={(e) => {
+                  const newProvince = e.target.value;
+                  setBlockedProvinceFilter(newProvince);
+                  const availableDistricts = getAvailableDistricts(newProvince);
+                  if (blockedDistrictFilter && !availableDistricts.includes(blockedDistrictFilter)) {
+                    setBlockedDistrictFilter("");
+                  }
+                  setBlockedPage(0);
+                }}
+                className="appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-10 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">All Provinces</option>
+                {provinces.map((province) => (
+                  <option key={province} value={province}>
+                    {province}
+                  </option>
+                ))}
+              </select>
+              {/* මෙතැනින් ඔබේ අයිකනය (React Icons වලින්) ඇතුළත් කරන්න */}
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
 
+            <div className="relative inline-block">
             <select
               value={blockedDistrictFilter}
               onChange={(e) => {
                 setBlockedDistrictFilter(e.target.value);
                 setBlockedPage(0);
               }}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              className="appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-10 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
             >
               <option value="">All Districts</option>
-              {districts.map((district) => (
+              {getAvailableDistricts(blockedProvinceFilter).map((district) => (
                 <option key={district} value={district}>
                   {district}
                 </option>
               ))}
             </select>
+  
+              {/* Dropdown ඊතලය */}
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
 
             <div className="w-full sm:w-64 relative">
               <LuSearch className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
@@ -487,88 +547,90 @@ export default function FarmersPage() {
         </div>
 
         {/* Desktop Table */}
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full table-fixed">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                  Farmer Name
-                </th>
-                <th className="w-[24%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                  Email
-                </th>
-                <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                  Province
-                </th>
-                <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                  District
-                </th>
-                <th className="w-[16%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                  Blocked Date
-                </th>
-                <th className="w-[14%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedBlocked.map((farmer) => (
-                <tr
-                  key={farmer._id}
-                  className="border-b border-slate-100 hover:bg-slate-50"
-                >
-                  <td className="w-[18%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
-                    {farmer.firstName} {farmer.lastName}
-                  </td>
-                  <td className="w-[28%] py-4 px-4 text-sm text-slate-600 truncate">
-                    {farmer.email}
-                  </td>
-                  <td className="w-[14%] py-4 px-4 text-sm text-slate-600 truncate">
-                    {farmer.province || "-"}
-                  </td>
-                  <td className="w-[14%] py-4 px-4 text-sm text-slate-600 truncate">
-                    {farmer.district || "-"}
-                  </td>
-                  <td className="w-[16%] py-4 px-4 text-sm text-slate-600 truncate">
-                    {farmer.blockedAt
-                      ? new Date(farmer.blockedAt).toLocaleDateString()
-                      : "-"}
-                  </td>
-                  <td className="w-[10%] py-4 px-4">
-                    <div className="flex justify-center gap-2">
-                      <button
-                        onClick={() => {
-                          setSelectedFarmer(farmer);
-                          setProfileModalOpen(true);
-                        }}
-                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50"
-                        title="View Profile"
-                      >
-                        <LuEye className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setReasonModalFarmer(farmer);
-                          setReasonModalOpen(true);
-                        }}
-                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50"
-                        title="View Block Reason"
-                      >
-                        <LuInfo className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleUnblockClick(farmer)}
-                        className="rounded-lg bg-blue-50 px-3 py-2 text-blue-600 hover:bg-blue-100"
-                        title="Unblock Farmer"
-                      >
-                        <LuZap className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+        <div className="hidden md:flex flex-col flex-1 overflow-hidden">
+          <div className="overflow-x-auto overflow-y-auto">
+            <table className="w-full table-fixed">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    Farmer Name
+                  </th>
+                  <th className="w-[22%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    Email
+                  </th>
+                  <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    Province
+                  </th>
+                  <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    District
+                  </th>
+                  <th className="w-[16%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    Blocked Date
+                  </th>
+                  <th className="w-[16%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
+                    Action
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginatedBlocked.map((farmer) => (
+                  <tr
+                    key={farmer._id}
+                    className="border-b border-slate-100 hover:bg-slate-50 h-16"
+                  >
+                    <td className="w-[18%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
+                      {farmer.firstName} {farmer.lastName}
+                    </td>
+                    <td className="w-[28%] py-4 px-4 text-sm text-slate-600 truncate">
+                      {farmer.email}
+                    </td>
+                    <td className="w-[14%] py-4 px-4 text-sm text-slate-600 truncate">
+                      {farmer.province || "-"}
+                    </td>
+                    <td className="w-[14%] py-4 px-4 text-sm text-slate-600 truncate">
+                      {farmer.district || "-"}
+                    </td>
+                    <td className="w-[16%] py-4 px-4 text-sm text-slate-600 truncate">
+                      {farmer.blockedAt
+                        ? new Date(farmer.blockedAt).toLocaleDateString()
+                        : "-"}
+                    </td>
+                    <td className="w-[10%] py-4 px-4">
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedFarmer(farmer);
+                            setProfileModalOpen(true);
+                          }}
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50"
+                          title="View Profile"
+                        >
+                          <LuEye className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setReasonModalFarmer(farmer);
+                            setReasonModalOpen(true);
+                          }}
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50"
+                          title="View Block Reason"
+                        >
+                          <LuInfo className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleUnblockClick(farmer)}
+                          className="rounded-lg bg-blue-50 px-3 py-2 text-blue-600 hover:bg-blue-100"
+                          title="Unblock Farmer"
+                        >
+                          <LuZap className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Mobile Cards */}
@@ -642,14 +704,14 @@ export default function FarmersPage() {
         </div>
 
         {paginatedBlocked.length === 0 && (
-          <div className="py-8 text-center text-slate-500">
+          <div className="flex-1 lg:-mt-100 -mt-0 flex items-center justify-center text-slate-500">
             <p className="text-sm">No blocked farmers found</p>
           </div>
         )}
 
         {/* Pagination */}
         {blockedPages > 0 && (
-          <div className="mt-6 flex items-center justify-center gap-2 border-t border-slate-100 pt-6">
+          <div className="shrink-0 flex items-center justify-center gap-2 pt-6">
             <button
               onClick={() => setBlockedPage((p) => Math.max(0, p - 1))}
               disabled={blockedPage === 0}
