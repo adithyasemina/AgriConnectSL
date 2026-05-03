@@ -47,24 +47,6 @@ function MenuIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
-function SearchIcon({ className = "h-4 w-4" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z"
-      />
-    </svg>
-  );
-}
-
 function DashboardIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg
@@ -83,7 +65,7 @@ function DashboardIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
-function FarmersIcon({ className = "h-5 w-5" }: IconProps) {
+function SearchLeafIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg
       className={className}
@@ -95,13 +77,13 @@ function FarmersIcon({ className = "h-5 w-5" }: IconProps) {
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="M17 20h5v-2a4 4 0 00-5-4M9 20H4v-2a4 4 0 015-4m0-4a4 4 0 100-8 4 4 0 000 8zm8 0a4 4 0 100-8 4 4 0 000 8z"
+        d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242m-4.243 4.242L9.88 9.88"
       />
     </svg>
   );
 }
 
-function ReportsIcon({ className = "h-5 w-5" }: IconProps) {
+function ChatIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg
       className={className}
@@ -113,12 +95,7 @@ function ReportsIcon({ className = "h-5 w-5" }: IconProps) {
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="M7 4h7l5 5v11H7V4z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M14 4v5h5M9 13h6M9 17h6"
+        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
       />
     </svg>
   );
@@ -137,60 +114,6 @@ function AlertsIcon({ className = "h-5 w-5" }: IconProps) {
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-      />
-    </svg>
-  );
-}
-
-function MessagesIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-      />
-    </svg>
-  );
-}
-
-function ArticlesIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-      />
-    </svg>
-  );
-}
-
-function SoilIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
       />
     </svg>
   );
@@ -215,20 +138,22 @@ function LogoutIcon({ className = "h-5 w-5" }: IconProps) {
 }
 
 const menuItems = [
-  { name: "Dashboard", href: "/officer", icon: DashboardIcon },
-  { name: "Farmers", href: "/officer/farmers", icon: FarmersIcon },
-  { name: "Alerts", href: "/officer/alerts", icon: AlertsIcon },
-  { name: "Messages", href: "/officer/messages", icon: MessagesIcon },
-  { name: "Articles", href: "/officer/articles", icon: ArticlesIcon },
-  { name: "Soil Test", href: "/officer/soil-test", icon: SoilIcon },
+  { name: "Dashboard", href: "/farmer", icon: DashboardIcon },
+  { name: "Find Disease", href: "/farmer/find", icon: SearchLeafIcon },
+  { name: "Chat", href: "/farmer/chat", icon: ChatIcon },
+  { name: "Alerts", href: "/farmer/alerts", icon: AlertsIcon },
 ];
 
-export default function OfficerLayout({ children }: { children: ReactNode }) {
+export default function FarmerLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const user = getAuthUser();
 
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const firstName = user?.firstName || "Farmer";
+  const lastName = user?.lastName || "";
+  const initial = user?.firstName?.[0] || "F";
 
   const handleLogout = () => {
     clearAuthData();
@@ -236,7 +161,7 @@ export default function OfficerLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["officer"]}>
+    <ProtectedRoute allowedRoles={["farmer"]}>
       <div className="min-h-screen bg-[#f8fafc] text-slate-900">
         {isMobileOpen && (
           <button
@@ -261,14 +186,14 @@ export default function OfficerLayout({ children }: { children: ReactNode }) {
                 AgriConnect
               </h1>
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                Officer Panel
+                Farmer Panel
               </p>
             </div>
           </div>
 
           <nav className="flex-1 overflow-y-auto px-4 py-6">
             <p className="mb-3 px-3 text-xs font-black uppercase tracking-widest text-slate-400">
-              Officer Menu
+              Farmer Menu
             </p>
 
             <div className="space-y-1">
@@ -308,24 +233,26 @@ export default function OfficerLayout({ children }: { children: ReactNode }) {
 
         <div className="min-h-screen lg:pl-72">
           <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsMobileOpen(true)}
-                className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-600 lg:hidden"
-                aria-label="Open sidebar"
-              >
-                <MenuIcon />
-              </button>
-            </div>
+            <button
+              onClick={() => setIsMobileOpen(true)}
+              className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-600 lg:hidden"
+              aria-label="Open sidebar"
+            >
+              <MenuIcon />
+            </button>
 
-            <div className="flex items-center gap-3">
-              <div className="relative hidden h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-500 sm:flex">
-                🔔
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-600" />
+            <div className="hidden lg:block" />
+
+            <div className="flex items-center gap-3 px-3 py-2">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-sm font-black text-white">
+                {initial}
               </div>
 
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-sm font-black text-white">
-                {user?.firstName?.[0] || "O"}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black text-slate-900">
+                  {firstName} {lastName}
+                </p>
+                <p className="text-xs font-semibold text-slate-400">Farmer</p>
               </div>
             </div>
           </header>
