@@ -240,31 +240,47 @@ export default function AlertsPage() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-2">
-      {/* Alerts Table/Cards */}
-      <div className="flex h-[540px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      {/* Recent Alerts Section */}
+      <div className="flex h-[560px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="shrink-0 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          {/* Left Section: Title */}
-          <h2 className="text-lg font-black text-slate-900 flex-shrink-0">
-            Recent Alerts ({filteredAlerts.length})
-          </h2>
+          {/* Left Section: Title and Count */}
+          <div className="flex items-center ml-4 gap-3 min-w-fit">
+            <div className="flex flex-col">
+              <h2 className="text-lg font-black text-slate-900">
+                RECENT ALERTS
+              </h2>
+              <p className="text-sm font-medium text-slate-500 flex items-center gap-1">
+                {filteredAlerts.length} ALERTS
+                <span className="h-3 w-3 rounded-full bg-orange-500 animate-pulse flex-shrink-0" />
+              </p>
+            </div>
+          </div>
 
           {/* Right Section: Filters and Search */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 sm:justify-end">
-            <select
-              value={officerFilter}
-              onChange={(e) => {
-                setOfficerFilter(e.target.value);
-                setCurrentPage(0);
-              }}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-            >
-              <option value="">All Officers</option>
-              {getUniqueOfficers().map((officer) => (
-                <option key={officer} value={officer}>
-                  {officer}
-                </option>
-              ))}
-            </select>
+            <div className="relative inline-block">
+              <select
+                value={officerFilter}
+                onChange={(e) => {
+                  setOfficerFilter(e.target.value);
+                  setCurrentPage(0);
+                }}
+                className="appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-10 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">All Officers</option>
+                {getUniqueOfficers().map((officer) => (
+                  <option key={officer} value={officer}>
+                    {officer}
+                  </option>
+                ))}
+              </select>
+              {/* Officer Dropdown Chevron */}
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
 
             {/* Search Bar */}
             <div className="w-full sm:w-64 relative">
@@ -277,7 +293,7 @@ export default function AlertsPage() {
                   setSearchQuery(e.target.value);
                   setCurrentPage(0);
                 }}
-                className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
             </div>
           </div>
