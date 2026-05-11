@@ -74,13 +74,21 @@ exports.createSoilTest = async (req, res) => {
       });
     }
 
+    const now = new Date();
+    const submitTime = now.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
     const soilTest = new SoilTest({
       farmerId,
       farmerName,
       farmerEmail,
       farmerNote: farmerNote || "",
       status: "pending",
-      submitDate: new Date(),
+      submitDate: now,
+      submitTime: submitTime,
     });
 
     await soilTest.save();
@@ -252,6 +260,132 @@ exports.recallSoilTest = async (req, res) => {
     console.error("Recall soil test error:", error.message);
     return res.status(500).json({
       message: "Failed to recall soil test",
+      error: error.message,
+    });
+  }
+};
+
+// Update completed soil test
+exports.updateCompletedSoilTest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      phLevel,
+      nitrogen,
+      phosphorus,
+      potassium,
+      overallStatus,
+      recommendation,
+      reason,
+    } = req.body;
+
+    const soilTest = await SoilTest.findById(id);
+
+    if (!soilTest) {
+      return res.status(404).json({
+        message: "Soil test not found",
+      });
+    }
+
+    if (soilTest.status !== "completed") {
+      return res.status(400).json({
+        message: "Can only update completed soil tests",
+      });
+    }
+
+    // Update fields
+    if (phLevel !== undefined) soilTest.phLevel = phLevel;
+    if (nitrogen !== undefined) soilTest.nitrogen = nitrogen;
+    if (phosphorus !== undefined) soilTest.phosphorus = phosphorus;
+    if (potassium !== undefined) soilTest.potassium = potassium;
+    if (overallStatus !== undefined) soilTest.overallStatus = overallStatus;
+    if (recommendation !== undefined) soilTest.recommendation = recommendation;
+    if (reason !== undefined) soilTest.reason = reason;
+
+    await soilTest.save();
+
+    return res.status(200).json({
+      message: "Completed soil test updated successfully",
+      soilTest,
+    });
+  } catch (error) {
+    console.error("Update completed soil test error:", error.message);
+    return res.status(500).json({
+      message: "Failed to update completed soil test",
+      error: error.message,
+    });
+  }
+};
+
+// Update recalled soil test
+exports.updateRecalledSoilTest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const soilTest = await SoilTest.findById(id);
+
+    if (!soilTest) {
+      return res.status(404).json({
+        message: "Soil test not found",
+      });
+    }
+
+    if (soilTest.status !== "recall") {
+      return res.status(400).json({
+        message: "Can only update recalled soil tests",
+      });
+    }
+
+    if (reason !== undefined) {
+      soilTest.reason = reason;
+    }
+
+    await soilTest.save();
+
+    return res.status(200).json({
+      message: "Recalled soil test updated successfully",
+      soilTest,
+    });
+  } catch (error) {
+    console.error("Update recalled soil test error:", error.message);
+    return res.status(500).json({
+      message: "Failed to update recalled soil test",
+      error: error.message,
+    });
+  }
+};
+
+// Re-pending soil test (move completed/recalled back to pending)
+exports.rePendingSoilTest = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const soilTest = await SoilTest.findById(id);
+
+    if (!soilTest) {
+      return res.status(404).json({
+        message: "Soil test not found",
+      });
+    }
+
+    if (soilTest.status !== "completed" && soilTest.status !== "recall") {
+      return res.status(400).json({
+        message: "Can only re-pending completed or recalled soil tests",
+      });
+    }
+
+    soilTest.status = "pending";
+    soilTest.save();
+
+    return res.status(200).json({
+      message: "Soil test moved to pending successfully",
+      soilTest,
+    });
+  } catch (error) {
+    console.error("Re-pending soil test error:", error.message);
+    return res.status(500).json({
+      message: "Failed to move soil test to pending",
       error: error.message,
     });
   }

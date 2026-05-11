@@ -6,12 +6,13 @@ import toast from "react-hot-toast";
 import {
   LuSearch,
   LuEye,
-  LuZap,
+  LuCheck,
   LuX,
   LuChevronLeft,
   LuChevronRight,
-  LuBan,
+  LuRotateCcw,
   LuInfo,
+  LuPencil,
 } from "react-icons/lu";
 
 type SoilTest = {
@@ -21,6 +22,7 @@ type SoilTest = {
   farmerEmail: string;
   farmerNote?: string;
   submitDate: string;
+  submitTime?: string;
   status: "pending" | "completed" | "recall";
   approvedOfficerId?: string;
   approvedOfficerName?: string;
@@ -62,6 +64,10 @@ export default function SoilTestPage() {
   const [recallModalOpen, setRecallModalOpen] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [editCompletedModalOpen, setEditCompletedModalOpen] = useState(false);
+  const [editRecalledModalOpen, setEditRecalledModalOpen] = useState(false);
+  const [rePendingConfirmOpen, setRePendingConfirmOpen] = useState(false);
+  const [rePendingType, setRePendingType] = useState<"completed" | "recall">("completed");
   const [detailType, setDetailType] = useState<"completed" | "recall">("completed");
 
   const [selectedSoilTest, setSelectedSoilTest] = useState<SoilTest | null>(null);
@@ -77,6 +83,20 @@ export default function SoilTestPage() {
   });
 
   const [recallFormData, setRecallFormData] = useState({
+    reason: "",
+  });
+
+  const [editCompletedFormData, setEditCompletedFormData] = useState({
+    phLevel: "",
+    nitrogen: "",
+    phosphorus: "",
+    potassium: "",
+    overallStatus: "Good",
+    recommendation: "",
+    reason: "",
+  });
+
+  const [editRecalledFormData, setEditRecalledFormData] = useState({
     reason: "",
   });
 
@@ -134,6 +154,146 @@ export default function SoilTestPage() {
     setSelectedSoilTest(soilTest);
     setDetailType(type);
     setDetailModalOpen(true);
+  };
+
+  const handleEditCompletedClick = (soilTest: SoilTest) => {
+    setSelectedSoilTest(soilTest);
+    setEditCompletedFormData({
+      phLevel: soilTest.phLevel?.toString() || "",
+      nitrogen: soilTest.nitrogen?.toString() || "",
+      phosphorus: soilTest.phosphorus?.toString() || "",
+      potassium: soilTest.potassium?.toString() || "",
+      overallStatus: soilTest.overallStatus || "Good",
+      recommendation: soilTest.recommendation || "",
+      reason: soilTest.reason || "",
+    });
+    setEditCompletedModalOpen(true);
+  };
+
+  const handleEditRecalledClick = (soilTest: SoilTest) => {
+    setSelectedSoilTest(soilTest);
+    setEditRecalledFormData({
+      reason: soilTest.reason || "",
+    });
+    setEditRecalledModalOpen(true);
+  };
+
+  const handleUpdateCompletedSoilTest = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (
+      !editCompletedFormData.phLevel ||
+      !editCompletedFormData.nitrogen ||
+      !editCompletedFormData.phosphorus ||
+      !editCompletedFormData.potassium
+    ) {
+      toast.error("All soil test fields are required");
+      return;
+    }
+
+    setSending(true);
+    try {
+      const response = await api.patch(
+        `/api/soil-tests/${selectedSoilTest?._id}/update-completed`,
+        {
+          phLevel: parseFloat(editCompletedFormData.phLevel),
+          nitrogen: parseFloat(editCompletedFormData.nitrogen),
+          phosphorus: parseFloat(editCompletedFormData.phosphorus),
+          potassium: parseFloat(editCompletedFormData.potassium),
+          overallStatus: editCompletedFormData.overallStatus,
+          recommendation: editCompletedFormData.recommendation,
+          reason: editCompletedFormData.reason,
+        }
+      );
+
+      toast.success("Completed soil test updated successfully");
+
+      // Update local state
+      setCompletedSoilTests(
+        completedSoilTests.map((test) =>
+          test._id === selectedSoilTest?._id ? response.data.soilTest : test
+        )
+      );
+
+      setEditCompletedModalOpen(false);
+      setSelectedSoilTest(null);
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || "Failed to update completed soil test";
+      toast.error(errorMsg);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleUpdateRecalledSoilTest = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!editRecalledFormData.reason.trim()) {
+      toast.error("Reason is required");
+      return;
+    }
+
+    setSending(true);
+    try {
+      const response = await api.patch(
+        `/api/soil-tests/${selectedSoilTest?._id}/update-recall`,
+        {
+          reason: editRecalledFormData.reason,
+        }
+      );
+
+      toast.success("Recalled soil test updated successfully");
+
+      // Update local state
+      setRecalledSoilTests(
+        recalledSoilTests.map((test) =>
+          test._id === selectedSoilTest?._id ? response.data.soilTest : test
+        )
+      );
+
+      setEditRecalledModalOpen(false);
+      setSelectedSoilTest(null);
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || "Failed to update recalled soil test";
+      toast.error(errorMsg);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleRePendingClick = (soilTest: SoilTest, type: "completed" | "recall") => {
+    setSelectedSoilTest(soilTest);
+    setRePendingType(type);
+    setRePendingConfirmOpen(true);
+  };
+
+  const handleConfirmRePending = async () => {
+    setSending(true);
+    try {
+      const response = await api.put(`/api/soil-tests/${selectedSoilTest?._id}/re-pending`);
+
+      toast.success("Soil test moved to pending successfully");
+
+      // Update local state
+      if (rePendingType === "completed") {
+        setCompletedSoilTests(
+          completedSoilTests.filter((test) => test._id !== selectedSoilTest?._id)
+        );
+      } else {
+        setRecalledSoilTests(
+          recalledSoilTests.filter((test) => test._id !== selectedSoilTest?._id)
+        );
+      }
+      setPendingSoilTests([response.data.soilTest, ...pendingSoilTests]);
+
+      setRePendingConfirmOpen(false);
+      setSelectedSoilTest(null);
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || "Failed to move soil test to pending";
+      toast.error(errorMsg);
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleCompleteSoilTest = async (e: React.FormEvent) => {
@@ -263,6 +423,9 @@ export default function SoilTestPage() {
     onRecall,
     onNote,
     onDetail,
+    onEditCompleted,
+    onEditRecalled,
+    onRePending,
     tableType,
   }: {
     title: string;
@@ -277,6 +440,9 @@ export default function SoilTestPage() {
     onRecall?: (test: SoilTest) => void;
     onNote?: (test: SoilTest) => void;
     onDetail?: (test: SoilTest, type: "completed" | "recall") => void;
+    onEditCompleted?: (test: SoilTest) => void;
+    onEditRecalled?: (test: SoilTest) => void;
+    onRePending?: (test: SoilTest, type: "completed" | "recall") => void;
     tableType: "pending" | "completed" | "recall";
   }) => (
     <div className="flex h-[560px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
@@ -287,7 +453,7 @@ export default function SoilTestPage() {
             <h2 className="text-lg font-black text-slate-900">{title}</h2>
             <p className="text-sm font-medium text-slate-500 flex items-center gap-1">
               {count} TESTS
-              <span className="h-3 w-3 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
+              {/* <span className="h-3 w-3 rounded-full bg-orange-500 animate-pulse flex-shrink-0" /> */}
             </p>
           </div>
         </div>
@@ -316,11 +482,14 @@ export default function SoilTestPage() {
               <tr className="border-b border-slate-200">
                 {tableType === "pending" && (
                   <>
-                    <th className="w-[30%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[25%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                       Farmer Name
                     </th>
-                    <th className="w-[30%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                       Submit Date
+                    </th>
+                    <th className="w-[15%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                      Submit Time
                     </th>
                     <th className="w-[40%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
                       Action
@@ -329,38 +498,38 @@ export default function SoilTestPage() {
                 )}
                 {tableType === "completed" && (
                   <>
-                    <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                       Farmer Name
                     </th>
-                    <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                       Approved Officer
                     </th>
-                    <th className="w-[15%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[12%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                       Date
                     </th>
-                    <th className="w-[15%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[12%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                       Time
                     </th>
-                    <th className="w-[30%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[40%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
                       Action
                     </th>
                   </>
                 )}
                 {tableType === "recall" && (
                   <>
-                    <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                       Farmer Name
                     </th>
-                    <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                       Re Call Officer
                     </th>
-                    <th className="w-[15%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[12%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                       Date
                     </th>
-                    <th className="w-[15%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[12%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                       Time
                     </th>
-                    <th className="w-[30%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[40%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
                       Action
                     </th>
                   </>
@@ -373,11 +542,14 @@ export default function SoilTestPage() {
                   <tr key={test._id} className="border-b border-slate-100 hover:bg-slate-50 h-16">
                     {tableType === "pending" && (
                       <>
-                        <td className="w-[30%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
+                        <td className="w-[25%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
                           {test.farmerName}
                         </td>
-                        <td className="w-[30%] py-4 px-4 text-sm text-slate-600 truncate">
+                        <td className="w-[20%] py-4 px-4 text-sm text-slate-600 truncate">
                           {formatDate(test.submitDate)}
+                        </td>
+                        <td className="w-[15%] py-4 px-4 text-sm text-slate-600 truncate">
+                          {test.submitTime || "-"}
                         </td>
                         <td className="w-[40%] py-4 px-4">
                           <div className="flex justify-center gap-2">
@@ -386,14 +558,14 @@ export default function SoilTestPage() {
                               className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-bold text-green-600 hover:bg-green-100"
                               title="Complete"
                             >
-                              <LuZap className="h-4 w-4" />
+                              <LuCheck className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => onRecall?.(test)}
                               className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-600 hover:bg-orange-100"
                               title="Re Call"
                             >
-                              <LuBan className="h-4 w-4" />
+                              <LuRotateCcw className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => onNote?.(test)}
@@ -408,25 +580,40 @@ export default function SoilTestPage() {
                     )}
                     {tableType === "completed" && (
                       <>
-                        <td className="w-[20%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
+                        <td className="w-[18%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
                           {test.farmerName}
                         </td>
-                        <td className="w-[20%] py-4 px-4 text-sm text-slate-600 truncate">
+                        <td className="w-[18%] py-4 px-4 text-sm text-slate-600 truncate">
                           {test.approvedOfficerName || "-"}
                         </td>
-                        <td className="w-[15%] py-4 px-4 text-sm text-slate-600 truncate">
+                        <td className="w-[12%] py-4 px-4 text-sm text-slate-600 truncate">
                           {test.completedDate ? formatDate(test.completedDate) : "-"}
                         </td>
-                        <td className="w-[15%] py-4 px-4 text-sm text-slate-600 truncate">
+                        <td className="w-[12%] py-4 px-4 text-sm text-slate-600 truncate">
                           {test.completedTime || "-"}
                         </td>
-                        <td className="w-[30%] py-4 px-4">
-                          <div className="flex justify-center">
+                        <td className="w-[40%] py-4 px-4">
+                          <div className="flex justify-center gap-2">
                             <button
                               onClick={() => onDetail?.(test, "completed")}
-                              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                              title="View"
                             >
-                              Complete Detail
+                              <LuEye className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => onEditCompleted?.(test)}
+                              className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-100"
+                              title="Edit"
+                            >
+                              <LuPencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => onRePending?.(test, "completed")}
+                              className="rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-bold text-purple-600 hover:bg-purple-100"
+                              title="Re Pending"
+                            >
+                              <LuRotateCcw className="h-4 w-4" />
                             </button>
                           </div>
                         </td>
@@ -434,25 +621,40 @@ export default function SoilTestPage() {
                     )}
                     {tableType === "recall" && (
                       <>
-                        <td className="w-[20%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
+                        <td className="w-[18%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
                           {test.farmerName}
                         </td>
-                        <td className="w-[20%] py-4 px-4 text-sm text-slate-600 truncate">
+                        <td className="w-[18%] py-4 px-4 text-sm text-slate-600 truncate">
                           {test.recallOfficerName || "-"}
                         </td>
-                        <td className="w-[15%] py-4 px-4 text-sm text-slate-600 truncate">
+                        <td className="w-[12%] py-4 px-4 text-sm text-slate-600 truncate">
                           {test.recallDate ? formatDate(test.recallDate) : "-"}
                         </td>
-                        <td className="w-[15%] py-4 px-4 text-sm text-slate-600 truncate">
+                        <td className="w-[12%] py-4 px-4 text-sm text-slate-600 truncate">
                           {test.recallTime || "-"}
                         </td>
-                        <td className="w-[30%] py-4 px-4">
-                          <div className="flex justify-center">
+                        <td className="w-[40%] py-4 px-4">
+                          <div className="flex justify-center gap-2">
                             <button
                               onClick={() => onDetail?.(test, "recall")}
-                              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                              title="View"
                             >
-                              Re Call Detail
+                              <LuEye className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => onEditRecalled?.(test)}
+                              className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-100"
+                              title="Edit"
+                            >
+                              <LuPencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => onRePending?.(test, "recall")}
+                              className="rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-bold text-purple-600 hover:bg-purple-100"
+                              title="Re Pending"
+                            >
+                              <LuRotateCcw className="h-4 w-4" />
                             </button>
                           </div>
                         </td>
@@ -613,6 +815,8 @@ export default function SoilTestPage() {
         setCurrentPage={setCompletedPage}
         totalPages={completedPages}
         onDetail={handleDetailClick}
+        onEditCompleted={handleEditCompletedClick}
+        onRePending={handleRePendingClick}
         tableType="completed"
       />
 
@@ -627,6 +831,8 @@ export default function SoilTestPage() {
         setCurrentPage={setRecalledPage}
         totalPages={recalledPages}
         onDetail={handleDetailClick}
+        onEditRecalled={handleEditRecalledClick}
+        onRePending={handleRePendingClick}
         tableType="recall"
       />
 
@@ -1080,6 +1286,312 @@ export default function SoilTestPage() {
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Completed Soil Test Modal */}
+      {editCompletedModalOpen && selectedSoilTest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-lg">
+            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-6">
+              <h2 className="text-lg font-black text-slate-900">Edit Completed Soil Test</h2>
+              <button
+                onClick={() => setEditCompletedModalOpen(false)}
+                className="rounded-lg text-slate-500 hover:bg-slate-100"
+              >
+                <LuX className="h-6 w-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateCompletedSoilTest} className="space-y-4 p-6">
+              {/* Farmer Name */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Farmer Name
+                </label>
+                <input
+                  type="text"
+                  value={selectedSoilTest.farmerName}
+                  disabled
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 outline-none cursor-not-allowed"
+                />
+              </div>
+
+              {/* Soil pH Level */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Soil pH Level *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={editCompletedFormData.phLevel}
+                  onChange={(e) =>
+                    setEditCompletedFormData({
+                      ...editCompletedFormData,
+                      phLevel: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., 6.5"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              {/* Nitrogen */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Nitrogen (mg/kg) *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={editCompletedFormData.nitrogen}
+                  onChange={(e) =>
+                    setEditCompletedFormData({
+                      ...editCompletedFormData,
+                      nitrogen: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., 150"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              {/* Phosphorus */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Phosphorus (mg/kg) *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={editCompletedFormData.phosphorus}
+                  onChange={(e) =>
+                    setEditCompletedFormData({
+                      ...editCompletedFormData,
+                      phosphorus: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., 50"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              {/* Potassium */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Potassium (mg/kg) *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={editCompletedFormData.potassium}
+                  onChange={(e) =>
+                    setEditCompletedFormData({
+                      ...editCompletedFormData,
+                      potassium: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., 200"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              {/* Overall Status */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Overall Status *
+                </label>
+                <select
+                  value={editCompletedFormData.overallStatus}
+                  onChange={(e) =>
+                    setEditCompletedFormData({
+                      ...editCompletedFormData,
+                      overallStatus: e.target.value,
+                    })
+                  }
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="Good">Good</option>
+                  <option value="Moderate">Moderate</option>
+                  <option value="Poor">Poor</option>
+                </select>
+              </div>
+
+              {/* Recommendation */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Recommendation
+                </label>
+                <textarea
+                  value={editCompletedFormData.recommendation}
+                  onChange={(e) =>
+                    setEditCompletedFormData({
+                      ...editCompletedFormData,
+                      recommendation: e.target.value,
+                    })
+                  }
+                  placeholder="Enter recommendations..."
+                  rows={4}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
+                />
+              </div>
+
+              {/* Reason */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Notes
+                </label>
+                <textarea
+                  value={editCompletedFormData.reason}
+                  onChange={(e) =>
+                    setEditCompletedFormData({
+                      ...editCompletedFormData,
+                      reason: e.target.value,
+                    })
+                  }
+                  placeholder="Enter any additional notes..."
+                  rows={3}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="flex-1 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sending ? "Updating..." : "Update"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditCompletedModalOpen(false)}
+                  className="flex-1 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Recalled Soil Test Modal */}
+      {editRecalledModalOpen && selectedSoilTest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-lg">
+            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-6">
+              <h2 className="text-lg font-black text-slate-900">Edit Re Called Soil Test</h2>
+              <button
+                onClick={() => setEditRecalledModalOpen(false)}
+                className="rounded-lg text-slate-500 hover:bg-slate-100"
+              >
+                <LuX className="h-6 w-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateRecalledSoilTest} className="space-y-4 p-6">
+              {/* Farmer Name */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Farmer Name
+                </label>
+                <input
+                  type="text"
+                  value={selectedSoilTest.farmerName}
+                  disabled
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 outline-none cursor-not-allowed"
+                />
+              </div>
+
+              {/* Reason */}
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Reason *
+                </label>
+                <textarea
+                  value={editRecalledFormData.reason}
+                  onChange={(e) =>
+                    setEditRecalledFormData({ reason: e.target.value })
+                  }
+                  placeholder="Enter reason for recalling..."
+                  rows={5}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="flex-1 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sending ? "Updating..." : "Update"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditRecalledModalOpen(false)}
+                  className="flex-1 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Re Pending Confirmation Modal */}
+      {rePendingConfirmOpen && selectedSoilTest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white shadow-lg">
+            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-6">
+              <h2 className="text-lg font-black text-slate-900">Confirm Re Pending</h2>
+              <button
+                onClick={() => setRePendingConfirmOpen(false)}
+                className="rounded-lg text-slate-500 hover:bg-slate-100"
+              >
+                <LuX className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="space-y-6 p-6">
+              <div>
+                <label className="text-xs font-black uppercase tracking-wider text-slate-500">
+                  Farmer Name
+                </label>
+                <p className="mt-2 text-sm font-bold text-slate-900">
+                  {selectedSoilTest.farmerName}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-orange-50 p-4 border border-orange-200">
+                <p className="text-sm text-orange-700">
+                  Are you sure you want to move this soil test back to pending status? This action will reset its {rePendingType === "completed" ? "completion" : "recall"} status.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleConfirmRePending}
+                  disabled={sending}
+                  className="flex-1 rounded-2xl bg-purple-600 px-6 py-3 text-sm font-black text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sending ? "Processing..." : "Confirm"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRePendingConfirmOpen(false)}
+                  className="flex-1 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

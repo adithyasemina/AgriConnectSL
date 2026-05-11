@@ -1,128 +1,82 @@
-'use client';
+﻿"use client";
 
-import Link from 'next/link';
-import { useState } from 'react';
+import Link from "next/link";
 
-export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+type Language = "en" | "si";
 
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
+interface NavbarProps {
+  language: Language;
+  setLanguage: (language: Language) => void;
+}
 
+export default function Navbar({ language, setLanguage }: NavbarProps) {
   const navLinks = [
-    { label: 'Home', href: '#hero' },
-    { label: 'Features', href: '#features' },
-    { label: 'How It Works', href: '#how-it-works' },
-    { label: 'About', href: '#about' },
+    { en: "Home", si: "මුල් පිටුව", href: "/" },
+    { en: "Contact", si: "සම්බන්ධ වන්න", href: "#" },
+    { en: "Articles", si: "ලිපි", href: "#" },
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white border-b border-green-100 shadow-sm">
+    <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm border-b border-slate-100 w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
           {/* Logo */}
-          <Link
-            href="/"
-            className="flex items-center gap-2 font-bold text-xl text-green-700 hover:text-green-800 transition-colors"
-          >
-            <span className="text-2xl">🌾</span>
-            AgriConnect
-          </Link>
+          <div className="flex-shrink-0">
+            <Link href="/" className="text-xl sm:text-2xl font-black text-slate-900 whitespace-nowrap">
+              AgriConnect
+            </Link>
+          </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          {/* Center Navigation - Rounded Pill - Hidden on Mobile */}
+          <div className="hidden md:flex items-center gap-1 bg-slate-100 rounded-full px-2 py-2">
             {navLinks.map((link) => (
-              <a
-                key={link.label}
+              <Link
+                key={link.href}
                 href={link.href}
-                className="text-gray-700 hover:text-green-700 transition-colors font-medium"
+                className="px-4 lg:px-6 py-2 rounded-full text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors whitespace-nowrap"
               >
-                {link.label}
-              </a>
+                {language === "en" ? link.en : link.si}
+              </Link>
             ))}
           </div>
 
-          {/* Desktop Buttons */}
-          <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/account"
-              className="px-4 py-2 text-green-700 font-medium hover:text-green-800 transition-colors"
+          {/* Language Toggle - Right */}
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button
+              onClick={() => setLanguage("en")}
+              className={`px-3 sm:px-4 py-2 rounded-full font-semibold text-xs sm:text-sm transition-colors whitespace-nowrap ${
+                language === "en"
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
             >
-              Login
-            </Link>
-            <Link
-              href="/account"
-              className="px-6 py-2 bg-green-700 text-white font-medium rounded-lg hover:bg-green-800 transition-colors"
+              English
+            </button>
+            <button
+              onClick={() => setLanguage("si")}
+              className={`px-3 sm:px-4 py-2 rounded-full font-semibold text-xs sm:text-sm transition-colors whitespace-nowrap ${
+                language === "si"
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
             >
-              Get Started
-            </Link>
+              සිංහල
+            </button>
           </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={toggleMenu}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            aria-label="Toggle menu"
-          >
-            <svg
-              className="w-6 h-6 text-gray-700"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              {isOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              )}
-            </svg>
-          </button>
         </div>
 
-        {/* Mobile Menu */}
-        {isOpen && (
-          <div className="md:hidden pb-4 border-t border-green-100">
-            <div className="flex flex-col gap-2 pt-4">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-colors font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {link.label}
-                </a>
-              ))}
-              <div className="flex flex-col gap-2 pt-2 border-t border-green-100">
-                <Link
-                  href="/account"
-                  className="px-4 py-2 text-green-700 font-medium hover:bg-green-50 rounded-lg transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/account"
-                  className="px-4 py-2 bg-green-700 text-white font-medium rounded-lg hover:bg-green-800 transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Get Started
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Mobile Navigation */}
+        <div className="md:hidden pb-3 flex flex-wrap gap-2">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+            >
+              {language === "en" ? link.en : link.si}
+            </Link>
+          ))}
+        </div>
       </div>
     </nav>
   );

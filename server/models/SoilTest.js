@@ -23,6 +23,10 @@ const soilTestSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    submitTime: {
+      type: String,
+      default: "",
+    },
 
     status: {
       type: String,

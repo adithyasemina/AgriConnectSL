@@ -8,6 +8,9 @@ const {
   createSoilTest,
   completeSoilTest,
   recallSoilTest,
+  updateCompletedSoilTest,
+  updateRecalledSoilTest,
+  rePendingSoilTest,
   getFarmerSoilNotifications,
 } = require("../controllers/soilTestController");
 
@@ -20,6 +23,9 @@ router.get("/recall", protect, officerOnly, getRecalledSoilTests);
 router.post("/", protect, createSoilTest);
 router.put("/:id/complete", protect, officerOnly, completeSoilTest);
 router.put("/:id/recall", protect, officerOnly, recallSoilTest);
+router.put("/:id/re-pending", protect, officerOnly, rePendingSoilTest);
+router.patch("/:id/update-completed", protect, officerOnly, updateCompletedSoilTest);
+router.patch("/:id/update-recall", protect, officerOnly, updateRecalledSoilTest);
 router.get("/notifications/:farmerId", protect, getFarmerSoilNotifications);
 
 module.exports = router;

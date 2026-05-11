@@ -10,6 +10,7 @@ import {
   LuChevronLeft,
   LuChevronRight,
   LuSearch,
+  LuTrash2,
 } from "react-icons/lu";
 
 type Alert = {
@@ -50,6 +51,9 @@ export default function AlertsPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [selectedDeleteAlert, setSelectedDeleteAlert] = useState<Alert | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [allProvinces, setAllProvinces] = useState(false);
   const [selectedProvinces, setSelectedProvinces] = useState<string[]>([]);
@@ -144,6 +148,36 @@ export default function AlertsPage() {
     setAllProvinces(false);
     setSelectedProvinces([]);
     setSelectedDistricts([]);
+  };
+
+  const handleDeleteClick = (alert: Alert) => {
+    setSelectedDeleteAlert(alert);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedDeleteAlert) return;
+
+    setDeleting(true);
+    try {
+      await api.delete(`/api/officer/alerts/${selectedDeleteAlert._id}`);
+      toast.success("Alert deleted successfully");
+      setDeleteConfirmOpen(false);
+      setSelectedDeleteAlert(null);
+
+      // Update alerts list
+      setAlerts(alerts.filter((a) => a._id !== selectedDeleteAlert._id));
+
+      // Adjust pagination if needed
+      if (paginatedAlerts.length === 1 && currentPage > 0) {
+        setCurrentPage(currentPage - 1);
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to delete alert");
+      console.error("Delete alert error:", error);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const getUniqueOfficers = () => {
@@ -344,7 +378,7 @@ export default function AlertsPage() {
                         </span>
                       </td>
                       <td className="w-[15%] py-4 px-4">
-                        <div className="flex justify-center">
+                        <div className="flex justify-center gap-2">
                           <button
                             onClick={() => {
                               setSelectedAlert(alert);
@@ -354,6 +388,13 @@ export default function AlertsPage() {
                             title="View Alert"
                           >
                             <LuEye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(alert)}
+                            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-600 hover:bg-red-100"
+                            title="Delete Alert"
+                          >
+                            <LuTrash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </td>
@@ -411,6 +452,12 @@ export default function AlertsPage() {
                       className="flex-1 rounded-lg border border-slate-200 bg-white py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
                     >
                       View
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(alert)}
+                      className="flex-1 rounded-lg border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
+                    >
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -780,9 +827,64 @@ export default function AlertsPage() {
                     setViewModalOpen(false);
                     setSelectedAlert(null);
                   }}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-600 hover:bg-slate-50"
+                  className="mt-6 w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700"
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmOpen && selectedDeleteAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-lg">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+              <h2 className="text-lg font-black text-slate-900">Delete Alert</h2>
+              <button
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  setSelectedDeleteAlert(null);
+                }}
+                className="rounded-lg text-slate-500 hover:bg-slate-100"
+              >
+                <LuX className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="space-y-6 p-6">
+              <div className="flex items-start gap-3">
+                <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100">
+                  <LuTrash2 className="h-4 w-4 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-slate-900">
+                    Are you sure you want to delete this alert?
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    "{selectedDeleteAlert.title}" will be permanently deleted. This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => {
+                    setDeleteConfirmOpen(false);
+                    setSelectedDeleteAlert(null);
+                  }}
+                  className="flex-1 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={deleting}
+                  className="flex-1 rounded-2xl bg-red-600 px-6 py-3 text-sm font-black text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deleting ? "Deleting..." : "Delete Alert"}
                 </button>
               </div>
             </div>
