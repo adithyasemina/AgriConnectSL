@@ -165,7 +165,7 @@ exports.getDashboardStats = async (req, res) => {
 
 exports.createAlert = async (req, res) => {
   try {
-    const { title, message, priority, targetType, targetProvinces, targetDistricts } = req.body;
+    const { title, message, priority, targetType, targetProvinces, targetDistricts, expiresAt } = req.body;
 
     if (!title || !message || !priority || !targetType) {
       return res.status(400).json({
@@ -197,6 +197,7 @@ exports.createAlert = async (req, res) => {
       createdBy: req.user._id,
       createdByName,
       isActive: true,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
     });
 
     await alert.save();
@@ -220,9 +221,16 @@ exports.getOfficerAlerts = async (req, res) => {
       .populate("createdBy", "-password")
       .sort({ createdAt: -1 });
 
+    const now = new Date();
+    const recentAlerts = alerts.filter(alert => !alert.expiresAt || alert.expiresAt > now);
+    const expiredAlerts = alerts.filter(alert => alert.expiresAt && alert.expiresAt <= now);
+
     return res.status(200).json({
       message: "Alerts retrieved successfully",
-      alerts,
+      alerts: {
+        recent: recentAlerts,
+        expired: expiredAlerts,
+      },
     });
   } catch (error) {
     console.error("Get alerts error:", error.message);

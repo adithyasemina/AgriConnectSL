@@ -40,6 +40,10 @@ const alertSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    expiresAt: {
+      type: Date,
+      required: false,
+    },
   },
   { timestamps: true }
 );
