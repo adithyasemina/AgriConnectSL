@@ -260,6 +260,64 @@ exports.getPublicAlerts = async (req, res) => {
   }
 };
 
+exports.updateAlert = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, message, priority, targetType, targetProvinces, targetDistricts, expiresAt } = req.body;
+
+    if (!title || !message || !priority || !targetType) {
+      return res.status(400).json({
+        message: "Title, message, priority, and targetType are required",
+      });
+    }
+
+    if (targetType === "provinces" && (!targetProvinces || targetProvinces.length === 0)) {
+      return res.status(400).json({
+        message: "At least one province must be selected for provinces targetType",
+      });
+    }
+
+    if (targetType === "districts" && (!targetDistricts || targetDistricts.length === 0)) {
+      return res.status(400).json({
+        message: "At least one district must be selected for districts targetType",
+      });
+    }
+
+    const alert = await Alert.findById(id);
+
+    if (!alert) {
+      return res.status(404).json({
+        message: "Alert not found",
+      });
+    }
+
+    alert.title = title;
+    alert.message = message;
+    alert.priority = priority;
+    alert.targetType = targetType;
+    alert.targetProvinces = targetType === "all" ? [] : targetProvinces || [];
+    alert.targetDistricts = targetType === "districts" ? targetDistricts : [];
+    if (expiresAt) {
+      alert.expiresAt = new Date(expiresAt);
+    } else {
+      alert.expiresAt = null;
+    }
+
+    await alert.save();
+
+    return res.status(200).json({
+      message: "Alert updated successfully",
+      alert,
+    });
+  } catch (error) {
+    console.error("Update alert error:", error.message);
+    return res.status(500).json({
+      message: "Failed to update alert",
+      error: error.message,
+    });
+  }
+};
+
 exports.deleteAlert = async (req, res) => {
   try {
     const { id } = req.params;

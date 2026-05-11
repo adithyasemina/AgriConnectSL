@@ -11,12 +11,14 @@ const {
   getOfficerAlerts,
   getPublicAlerts,
   deleteAlert,
+  updateAlert,
 } = require("../controllers/officerController");
 
 const { protect, officerOnly } = require("../middleware/authMiddleware");
 
 router.get("/dashboard-stats", protect, officerOnly, getDashboardStats);
 router.post("/alerts", protect, officerOnly, createAlert);
+router.put("/alerts/:id", protect, officerOnly, updateAlert);
 router.get("/alerts", protect, getOfficerAlerts);
 router.get("/public-alerts", protect, getPublicAlerts);
 router.delete("/alerts/:id", protect, officerOnly, deleteAlert);

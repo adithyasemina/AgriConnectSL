@@ -10,7 +10,7 @@ import {
   LuChevronLeft,
   LuChevronRight,
   LuTrash2,
-  LuEdit2,
+  LuPencil,
 } from "react-icons/lu";
 
 type Alert = {
@@ -176,30 +176,26 @@ export default function AlertsPage() {
 
       setSending(true);
 
+      const alertPayload = {
+        title: formData.title.trim(),
+        message: formData.message.trim(),
+        priority: formData.priority,
+        targetType,
+        targetProvinces,
+        targetDistricts,
+        expiresAt: formData.expiresAt || null,
+      };
+
       if (editingAlertId) {
-        // Update existing alert
-        await api.put(`/api/officer/alerts/${editingAlertId}`, {
-          title: formData.title,
-          message: formData.message,
-          priority: formData.priority,
-          targetType,
-          targetProvinces,
-          targetDistricts,
-          expiresAt: formData.expiresAt || null,
-        });
+        // Update existing alert using PUT
+        const response = await api.put(`/api/officer/alerts/${editingAlertId}`, alertPayload);
+        console.log("Alert updated:", response.data);
         toast.success("Alert updated successfully");
         setEditingAlertId(null);
       } else {
-        // Create new alert
-        await api.post("/api/officer/alerts", {
-          title: formData.title,
-          message: formData.message,
-          priority: formData.priority,
-          targetType,
-          targetProvinces,
-          targetDistricts,
-          expiresAt: formData.expiresAt || null,
-        });
+        // Create new alert using POST
+        const response = await api.post("/api/officer/alerts", alertPayload);
+        console.log("Alert created:", response.data);
         toast.success("Alert created successfully");
       }
 
@@ -207,9 +203,9 @@ export default function AlertsPage() {
       resetForm();
       fetchAlerts();
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Failed to send alert";
+      console.error("Full error object:", error);
+      const errorMsg = error.response?.data?.message || error.message || "Failed to send alert";
       toast.error(errorMsg);
-      console.error("Create/update alert error:", error);
     } finally {
       setSending(false);
       setSendConfirmOpen(false);
@@ -445,7 +441,7 @@ export default function AlertsPage() {
                           className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-blue-600 hover:bg-blue-100"
                           title="Edit Alert"
                         >
-                          <LuEdit2 className="h-4 w-4" />
+                          <LuPencil className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteClick(alert)}
@@ -794,9 +790,10 @@ export default function AlertsPage() {
 
       {/* Create Alert Modal */}
       {createModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-lg my-8">
-            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-6 z-10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-4xl h-[90vh] rounded-[2rem] bg-white shadow-lg flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 bg-white p-6 flex-shrink-0">
               <h2 className="text-lg font-black text-slate-900">
                 {editingAlertId ? "Edit Alert" : "Create New Alert"}
               </h2>
@@ -811,171 +808,163 @@ export default function AlertsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateAlert} className="space-y-4 p-6">
-              {/* Title */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Alert Title *
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => {
-                    setFormData({ ...formData, title: e.target.value });
-                    if (formErrors.title) {
-                      setFormErrors({ ...formErrors, title: "" });
-                    }
-                  }}
-                  placeholder="e.g., Heavy Rain Warning"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                />
-                {formErrors.title && (
-                  <p className="mt-1 text-xs text-red-600">{formErrors.title}</p>
-                )}
-              </div>
-
-              {/* Priority */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Priority *
-                </label>
-                <select
-                  value={formData.priority}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      priority: e.target.value as "Low" | "Medium" | "High",
-                    })
-                  }
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                </select>
-              </div>
-
-              {/* Expiry Date & Time */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Expiry Date & Time (Optional)
-                </label>
-                <input
-                  type="datetime-local"
-                  value={formData.expiresAt}
-                  onChange={(e) =>
-                    setFormData({ ...formData, expiresAt: e.target.value })
-                  }
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                />
-                <p className="mt-1 text-xs text-slate-500">
-                  Leave empty if the alert should never expire
-                </p>
-              </div>
-
-              {/* All Provinces Checkbox */}
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="allProvinces"
-                  checked={allProvinces}
-                  onChange={(e) => {
-                    setAllProvinces(e.target.checked);
-                    if (e.target.checked) {
-                      setSelectedProvinces([]);
-                      setSelectedDistricts([]);
-                    }
-                  }}
-                  className="rounded border-slate-200 text-blue-600"
-                />
-                <label htmlFor="allProvinces" className="text-sm font-bold text-slate-700">
-                  Send to All Provinces (Island-wide)
-                </label>
-              </div>
-
-              {/* Provinces */}
-              {!allProvinces && (
+            {/* Form Container - Two Column Layout */}
+            <form onSubmit={handleCreateAlert} className="flex-1 overflow-hidden flex flex-col lg:flex-row p-6 gap-6">
+              {/* Left Side - Form Fields */}
+              <div className="lg:flex-1 overflow-y-auto border border-slate-200 rounded-2xl bg-slate-50/50 p-6 space-y-4">
+                {/* Title */}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Select Provinces *
+                    Alert Title *
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {SRI_LANKAN_PROVINCES.map((province) => (
-                      <label
-                        key={province}
-                        className="flex items-center gap-2 text-sm text-slate-700"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedProvinces.includes(province)}
-                          onChange={(e) =>
-                            handleProvinceChange(province, e.target.checked)
-                          }
-                          className="rounded border-slate-200 text-blue-600"
-                        />
-                        {province}
-                      </label>
-                    ))}
-                  </div>
-                  {formErrors.provinces && (
-                    <p className="mt-2 text-xs text-red-600">{formErrors.provinces}</p>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => {
+                      setFormData({ ...formData, title: e.target.value });
+                      if (formErrors.title) {
+                        setFormErrors({ ...formErrors, title: "" });
+                      }
+                    }}
+                    placeholder="e.g., Heavy Rain Warning"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  />
+                  {formErrors.title && (
+                    <p className="mt-1 text-xs text-red-600">{formErrors.title}</p>
                   )}
                 </div>
-              )}
 
-              {/* Districts */}
-              {!allProvinces && selectedProvinces.length > 0 && (
+                {/* Priority */}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Select Districts (Optional)
+                    Priority *
                   </label>
-                  <p className="text-xs text-slate-500 mb-3">
-                    Select specific districts only if you do not want to send to the whole
-                    selected province.
+                  <select
+                    value={formData.priority}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        priority: e.target.value as "Low" | "Medium" | "High",
+                      })
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+
+                {/* Expiry Date & Time */}
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Expiry Date & Time (Optional)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formData.expiresAt}
+                    onChange={(e) =>
+                      setFormData({ ...formData, expiresAt: e.target.value })
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Leave empty if the alert should never expire
                   </p>
-                  {getAvailableDistricts().length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {getAvailableDistricts().map((district) => (
+                </div>
+
+                {/* All Provinces Checkbox */}
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="allProvinces"
+                    checked={allProvinces}
+                    onChange={(e) => {
+                      setAllProvinces(e.target.checked);
+                      if (e.target.checked) {
+                        setSelectedProvinces([]);
+                        setSelectedDistricts([]);
+                      }
+                    }}
+                    className="rounded border-slate-200 text-blue-600"
+                  />
+                  <label htmlFor="allProvinces" className="text-sm font-bold text-slate-700">
+                    Send to All Provinces (Island-wide)
+                  </label>
+                </div>
+
+                {/* Provinces */}
+                {!allProvinces && (
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                      Select Provinces *
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-slate-50">
+                      {SRI_LANKAN_PROVINCES.map((province) => (
                         <label
-                          key={district}
+                          key={province}
                           className="flex items-center gap-2 text-sm text-slate-700"
                         >
                           <input
                             type="checkbox"
-                            checked={selectedDistricts.includes(district)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedDistricts([...selectedDistricts, district]);
-                              } else {
-                                setSelectedDistricts(
-                                  selectedDistricts.filter((d) => d !== district)
-                                );
-                              }
-                            }}
+                            checked={selectedProvinces.includes(province)}
+                            onChange={(e) =>
+                              handleProvinceChange(province, e.target.checked)
+                            }
                             className="rounded border-slate-200 text-blue-600"
                           />
-                          {district}
+                          {province}
                         </label>
                       ))}
                     </div>
-                  ) : (
-                    <p className="text-xs text-slate-500">
-                      Select province first to view districts.
-                    </p>
-                  )}
-                </div>
-              )}
+                    {formErrors.provinces && (
+                      <p className="mt-2 text-xs text-red-600">{formErrors.provinces}</p>
+                    )}
+                  </div>
+                )}
 
-              {!allProvinces && selectedProvinces.length === 0 && (
-                <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-xs text-slate-600">
-                    Select province first to view districts.
-                  </p>
-                </div>
-              )}
+                {/* Districts */}
+                {!allProvinces && selectedProvinces.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                      Select Districts (Optional)
+                    </label>
+                    {getAvailableDistricts().length > 0 ? (
+                      <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-slate-50">
+                        {getAvailableDistricts().map((district) => (
+                          <label
+                            key={district}
+                            className="flex items-center gap-2 text-sm text-slate-700"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedDistricts.includes(district)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedDistricts([...selectedDistricts, district]);
+                                } else {
+                                  setSelectedDistricts(
+                                    selectedDistricts.filter((d) => d !== district)
+                                  );
+                                }
+                              }}
+                              className="rounded border-slate-200 text-blue-600"
+                            />
+                            {district}
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-500">
+                        Select province first to view districts.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
 
-              {/* Message */}
-              <div>
+              {/* Right Side - Message Box */}
+              <div className="w-full lg:w-96 border border-slate-200 rounded-2xl bg-slate-50/50 p-6 flex flex-col overflow-hidden">
                 <label className="block text-sm font-bold text-slate-700 mb-2">
                   Message *
                 </label>
@@ -988,35 +977,34 @@ export default function AlertsPage() {
                     }
                   }}
                   placeholder="Enter alert message..."
-                  rows={5}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
+                  className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
                 />
                 {formErrors.message && (
                   <p className="mt-1 text-xs text-red-600">{formErrors.message}</p>
                 )}
               </div>
-
-              {/* Fixed Buttons at Bottom */}
-              <div className="sticky bottom-0 flex gap-3 pt-4 bg-white border-t border-slate-200 -mx-6 px-6 py-4">
-                <button
-                  type="submit"
-                  disabled={sending || pendingSendAlert}
-                  className="flex-1 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {sending ? "Sending..." : editingAlertId ? "Update Alert" : "Send Alert"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCreateModalOpen(false);
-                    resetForm();
-                  }}
-                  className="flex-1 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-600 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-              </div>
             </form>
+
+            {/* Fixed Buttons at Bottom Right */}
+            <div className="flex gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50/30 flex-shrink-0 justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setCreateModalOpen(false);
+                  resetForm();
+                }}
+                className="rounded-2xl border border-slate-200 bg-white px-8 py-3 text-sm font-black text-slate-600 hover:bg-slate-50 min-w-fit"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateAlert}
+                disabled={sending || pendingSendAlert}
+                className="rounded-2xl bg-blue-600 px-8 py-3 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-fit"
+              >
+                {sending ? "Sending..." : editingAlertId ? "Update Alert" : "Send Alert"}
+              </button>
+            </div>
           </div>
         </div>
       )}
