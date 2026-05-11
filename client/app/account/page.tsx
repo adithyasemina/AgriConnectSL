@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 import { saveAuthData, UserRole } from "@/lib/auth";
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import toast from "react-hot-toast";
 
 const locations = {
@@ -86,6 +86,8 @@ const EyeOffIcon = () => (
 export default function AuthPage() {
   const router = useRouter();
 
+  const [mounted, setMounted] = useState(false);
+
   const [isRightPanelActive, setIsRightPanelActive] = useState(false);
   const [selectedProvince, setSelectedProvince] = useState<ProvinceName | "">(
     ""
@@ -98,6 +100,10 @@ export default function AuthPage() {
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSignInPassword, setShowSignInPassword] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const showToastError = (message: string) => {
     toast.error(message, {
@@ -242,6 +248,16 @@ export default function AuthPage() {
       setIsSignInWaiting(false);
     }
   };
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="rounded-2xl border border-green-100 bg-white px-6 py-4 shadow-sm">
+          Loading...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-full overflow-hidden bg-white font-sans">

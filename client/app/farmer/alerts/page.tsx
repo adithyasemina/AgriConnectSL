@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { api } from "@/lib/api";
+import { getAuthUser } from "@/lib/auth";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 function AlertIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -21,78 +24,69 @@ function AlertIcon({ className = "h-5 w-5" }: { className?: string }) {
 }
 
 type Alert = {
-  id: number;
+  _id: string;
   title: string;
   message: string;
   priority: "Low" | "Medium" | "High";
-  district: string;
-  sentDate: string;
-  officer: string;
+  targetType: "all" | "provinces" | "districts";
+  targetProvinces: string[];
+  targetDistricts: string[];
+  createdByName?: string;
+  createdBy?: { firstName: string; lastName: string } | string;
+  createdAt: string;
 };
-
-const sampleAlerts: Alert[] = [
-  {
-    id: 1,
-    title: "Heavy Rain Warning",
-    message: "Heavy rain expected in next 24 hours. Protect crops accordingly. Ensure proper drainage in your fields.",
-    priority: "High",
-    district: "Kandy",
-    sentDate: "2024-01-25",
-    officer: "Officer Saman Kumara",
-  },
-  {
-    id: 2,
-    title: "Pest Alert - Fall Armyworm",
-    message: "Fall armyworm detected in the region. Use recommended pesticides. Check your fields regularly.",
-    priority: "Medium",
-    district: "Kandy",
-    sentDate: "2024-01-24",
-    officer: "Officer Nimal Perera",
-  },
-  {
-    id: 3,
-    title: "Fertilizer Price Update",
-    message: "Fertilizer prices have increased by 5%. Plan your purchases accordingly.",
-    priority: "Low",
-    district: "Central",
-    sentDate: "2024-01-23",
-    officer: "Officer Kasun Silva",
-  },
-  {
-    id: 4,
-    title: "Disease Alert - Blast",
-    message: "Paddy leaf blast reported in nearby farms. Apply fungicide preventively. Monitor your crops closely.",
-    priority: "High",
-    district: "Kandy",
-    sentDate: "2024-01-22",
-    officer: "Officer Amal Fernando",
-  },
-  {
-    id: 5,
-    title: "Irrigation Schedule Update",
-    message: "Updated irrigation schedule for the season. Optimal timing is early morning.",
-    priority: "Medium",
-    district: "Central",
-    sentDate: "2024-01-21",
-    officer: "Officer Roshan Jayasekara",
-  },
-  {
-    id: 6,
-    title: "Market Price Alert",
-    message: "Paddy prices expected to increase next week. Consider timing your sales accordingly.",
-    priority: "Low",
-    district: "Western",
-    sentDate: "2024-01-20",
-    officer: "Officer Saman Kumara",
-  },
-];
 
 type FilterType = "All" | "High" | "Medium" | "Low";
 
 export default function AlertsPage() {
+  const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState<FilterType>("All");
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const user = getAuthUser();
 
-  const filteredAlerts = sampleAlerts.filter((alert) => {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
+  const fetchAlerts = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/api/officer/alerts");
+      setAlerts(res.data.alerts || []);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to fetch alerts");
+      setAlerts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isAlertVisibleToFarmer = (alert: Alert): boolean => {
+    if (!user) return false;
+
+    if (alert.targetType === "all") {
+      return true;
+    }
+
+    if (alert.targetType === "provinces") {
+      return alert.targetProvinces.includes(user.province || "");
+    }
+
+    if (alert.targetType === "districts") {
+      return alert.targetDistricts.includes(user.district || "");
+    }
+
+    return false;
+  };
+
+  const visibleAlerts = alerts.filter(isAlertVisibleToFarmer);
+
+  const filteredAlerts = visibleAlerts.filter((alert) => {
     if (filter === "All") return true;
     if (filter === "High") return alert.priority === "High";
     if (filter === "Medium") return alert.priority === "Medium";
@@ -113,6 +107,33 @@ export default function AlertsPage() {
     }
   };
 
+  const getCreatedByName = (alert: Alert) => {
+    if (typeof alert.createdBy === "string") return alert.createdBy;
+    if (alert.createdBy) {
+      return `${alert.createdBy.firstName} ${alert.createdBy.lastName}`;
+    }
+    return alert.createdByName || "Officer";
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+    } catch {
+      return dateString;
+    }
+  };
+
+  if (!mounted || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="rounded-2xl border border-green-100 bg-white px-6 py-4 shadow-sm">
+          Loading alerts...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Filters */}
@@ -125,7 +146,7 @@ export default function AlertsPage() {
               : "bg-white border border-slate-200 text-slate-600 hover:border-blue-600 hover:text-blue-600"
           }`}
         >
-          All ({sampleAlerts.length})
+          All ({filteredAlerts.length})
         </button>
         <button
           onClick={() => setFilter("High")}
@@ -135,7 +156,7 @@ export default function AlertsPage() {
               : "bg-white border border-slate-200 text-slate-600 hover:border-red-600 hover:text-red-600"
           }`}
         >
-          High Priority ({sampleAlerts.filter((a) => a.priority === "High").length})
+          High Priority ({visibleAlerts.filter((a) => a.priority === "High").length})
         </button>
         <button
           onClick={() => setFilter("Medium")}
@@ -145,7 +166,7 @@ export default function AlertsPage() {
               : "bg-white border border-slate-200 text-slate-600 hover:border-yellow-600 hover:text-yellow-600"
           }`}
         >
-          Medium ({sampleAlerts.filter((a) => a.priority === "Medium").length})
+          Medium ({visibleAlerts.filter((a) => a.priority === "Medium").length})
         </button>
         <button
           onClick={() => setFilter("Low")}
@@ -155,7 +176,7 @@ export default function AlertsPage() {
               : "bg-white border border-slate-200 text-slate-600 hover:border-blue-600 hover:text-blue-600"
           }`}
         >
-          Low ({sampleAlerts.filter((a) => a.priority === "Low").length})
+          Low ({visibleAlerts.filter((a) => a.priority === "Low").length})
         </button>
       </div>
 
@@ -164,7 +185,7 @@ export default function AlertsPage() {
         {filteredAlerts.length > 0 ? (
           filteredAlerts.map((alert) => (
             <div
-              key={alert.id}
+              key={alert._id}
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -182,9 +203,17 @@ export default function AlertsPage() {
                     </p>
 
                     <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
-                      <span>📍 {alert.district}</span>
-                      <span>👤 {alert.officer}</span>
-                      <span>📅 {new Date(alert.sentDate).toLocaleDateString()}</span>
+                      <span>👤 {getCreatedByName(alert)}</span>
+                      <span>📅 {formatDate(alert.createdAt)}</span>
+                      {alert.targetType === "districts" && alert.targetDistricts.length > 0 && (
+                        <span>📍 {alert.targetDistricts.join(", ")}</span>
+                      )}
+                      {alert.targetType === "provinces" && alert.targetProvinces.length > 0 && (
+                        <span>📍 {alert.targetProvinces.join(", ")}</span>
+                      )}
+                      {alert.targetType === "all" && (
+                        <span>📍 Island-wide</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -199,16 +228,18 @@ export default function AlertsPage() {
               </div>
 
               <div className="mt-4 border-t border-slate-100 pt-3">
-                <button className="text-xs font-black text-blue-600 hover:text-blue-700 transition">
-                  Read Full Alert →
-                </button>
+                <p className="text-xs text-slate-500 line-clamp-3">{alert.message}</p>
               </div>
             </div>
           ))
         ) : (
           <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
             <AlertIcon className="mx-auto h-12 w-12 text-slate-400 mb-3" />
-            <p className="text-slate-500">No alerts found for this filter</p>
+            <p className="text-slate-500">
+              {visibleAlerts.length === 0
+                ? "No alerts targeted to your location"
+                : "No alerts found for this filter"}
+            </p>
           </div>
         )}
       </div>
@@ -218,6 +249,7 @@ export default function AlertsPage() {
         <h3 className="font-black text-blue-900">📢 How Alerts Work</h3>
         <ul className="mt-3 space-y-2 text-sm text-blue-800">
           <li>✓ Officers send alerts about weather, pests, diseases, and market updates</li>
+          <li>✓ You only see alerts targeted to your location ({user?.province}, {user?.district})</li>
           <li>✓ High Priority alerts need immediate attention for your safety</li>
           <li>✓ Medium alerts are recommended actions for better crop health</li>
           <li>✓ Low alerts are informational updates about prices and schedules</li>

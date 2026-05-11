@@ -9,6 +9,7 @@ const {
   getDashboardStats,
   createAlert,
   getOfficerAlerts,
+  getPublicAlerts,
   deleteAlert,
 } = require("../controllers/officerController");
 
@@ -16,7 +17,8 @@ const { protect, officerOnly } = require("../middleware/authMiddleware");
 
 router.get("/dashboard-stats", protect, officerOnly, getDashboardStats);
 router.post("/alerts", protect, officerOnly, createAlert);
-router.get("/alerts", protect, officerOnly, getOfficerAlerts);
+router.get("/alerts", protect, getOfficerAlerts);
+router.get("/public-alerts", protect, getPublicAlerts);
 router.delete("/alerts/:id", protect, officerOnly, deleteAlert);
 router.get("/farmers/unblocked", protect, officerOnly, getUnblockedFarmers);
 router.get("/farmers/blocked", protect, officerOnly, getBlockedFarmers);

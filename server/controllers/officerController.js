@@ -233,6 +233,25 @@ exports.getOfficerAlerts = async (req, res) => {
   }
 };
 
+exports.getPublicAlerts = async (req, res) => {
+  try {
+    const alerts = await Alert.find({ isActive: true })
+      .populate("createdBy", "-password")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      message: "Alerts retrieved successfully",
+      alerts,
+    });
+  } catch (error) {
+    console.error("Get public alerts error:", error.message);
+    return res.status(500).json({
+      message: "Failed to retrieve alerts",
+      error: error.message,
+    });
+  }
+};
+
 exports.deleteAlert = async (req, res) => {
   try {
     const { id } = req.params;
