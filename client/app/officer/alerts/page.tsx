@@ -10,6 +10,7 @@ import {
   LuChevronLeft,
   LuChevronRight,
   LuTrash2,
+  LuEdit2,
 } from "react-icons/lu";
 
 type Alert = {
@@ -45,6 +46,7 @@ export default function AlertsPage() {
   const [expiredAlerts, setExpiredAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [priorityFilter, setPriorityFilter] = useState<"All" | "Low" | "Medium" | "High">("All");
+  const [expiredPriorityFilter, setExpiredPriorityFilter] = useState<"All" | "Low" | "Medium" | "High">("All");
   const [currentPageRecent, setCurrentPageRecent] = useState(0);
   const [currentPageExpired, setCurrentPageExpired] = useState(0);
   const ITEMS_PER_PAGE = 5;
@@ -55,7 +57,10 @@ export default function AlertsPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [selectedDeleteAlert, setSelectedDeleteAlert] = useState<Alert | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [sendConfirmOpen, setSendConfirmOpen] = useState(false);
+  const [pendingSendAlert, setPendingSendAlert] = useState(false);
 
+  const [editingAlertId, setEditingAlertId] = useState<string | null>(null);
   const [allProvinces, setAllProvinces] = useState(false);
   const [selectedProvinces, setSelectedProvinces] = useState<string[]>([]);
   const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
@@ -145,7 +150,11 @@ export default function AlertsPage() {
     e.preventDefault();
     if (!validateForm()) return;
 
-    setSending(true);
+    setPendingSendAlert(true);
+    setSendConfirmOpen(true);
+  };
+
+  const confirmSendAlert = async () => {
     try {
       let targetProvinces = selectedProvinces;
       let targetDistricts = selectedDistricts;
@@ -165,26 +174,46 @@ export default function AlertsPage() {
         targetDistricts = [];
       }
 
-      await api.post("/api/officer/alerts", {
-        title: formData.title,
-        message: formData.message,
-        priority: formData.priority,
-        targetType,
-        targetProvinces,
-        targetDistricts,
-        expiresAt: formData.expiresAt || null,
-      });
+      setSending(true);
 
-      toast.success("Alert created successfully");
+      if (editingAlertId) {
+        // Update existing alert
+        await api.put(`/api/officer/alerts/${editingAlertId}`, {
+          title: formData.title,
+          message: formData.message,
+          priority: formData.priority,
+          targetType,
+          targetProvinces,
+          targetDistricts,
+          expiresAt: formData.expiresAt || null,
+        });
+        toast.success("Alert updated successfully");
+        setEditingAlertId(null);
+      } else {
+        // Create new alert
+        await api.post("/api/officer/alerts", {
+          title: formData.title,
+          message: formData.message,
+          priority: formData.priority,
+          targetType,
+          targetProvinces,
+          targetDistricts,
+          expiresAt: formData.expiresAt || null,
+        });
+        toast.success("Alert created successfully");
+      }
+
       setCreateModalOpen(false);
       resetForm();
       fetchAlerts();
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Failed to create alert";
+      const errorMsg = error.response?.data?.message || "Failed to send alert";
       toast.error(errorMsg);
-      console.error("Create alert error:", error);
+      console.error("Create/update alert error:", error);
     } finally {
       setSending(false);
+      setSendConfirmOpen(false);
+      setPendingSendAlert(false);
     }
   };
 
@@ -194,6 +223,30 @@ export default function AlertsPage() {
     setAllProvinces(false);
     setSelectedProvinces([]);
     setSelectedDistricts([]);
+    setEditingAlertId(null);
+  };
+
+  const handleEditAlert = (alert: Alert) => {
+    setFormData({
+      title: alert.title,
+      message: alert.message,
+      priority: alert.priority,
+      expiresAt: alert.expiresAt ? new Date(alert.expiresAt).toISOString().slice(0, 16) : "",
+    });
+
+    if (alert.targetType === "all") {
+      setAllProvinces(true);
+      setSelectedProvinces([]);
+      setSelectedDistricts([]);
+    } else {
+      setAllProvinces(false);
+      setSelectedProvinces(alert.targetProvinces);
+      setSelectedDistricts(alert.targetDistricts);
+    }
+
+    setEditingAlertId(alert._id);
+    setCreateModalOpen(true);
+    setFormErrors({});
   };
 
   const handleDeleteClick = (alert: Alert) => {
@@ -225,8 +278,8 @@ export default function AlertsPage() {
   });
 
   const filteredExpiredAlerts = expiredAlerts.filter((alert) => {
-    if (priorityFilter === "All") return true;
-    return alert.priority === priorityFilter;
+    if (expiredPriorityFilter === "All") return true;
+    return alert.priority === expiredPriorityFilter;
   });
 
   const paginatedRecentAlerts = filteredRecentAlerts.slice(
@@ -246,6 +299,15 @@ export default function AlertsPage() {
     if (priority === "High") return "bg-red-100 text-red-700";
     if (priority === "Medium") return "bg-yellow-100 text-yellow-700";
     return "bg-blue-100 text-blue-700";
+  };
+
+  const formatExpiredDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return dateString;
+    }
   };
 
   const getAvailableDistricts = () => {
@@ -288,7 +350,7 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-2">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-2 pb-20">
       {/* Recent Alerts Section */}
       <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="shrink-0 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -311,7 +373,6 @@ export default function AlertsPage() {
                 onChange={(e) => {
                   setPriorityFilter(e.target.value as "All" | "Low" | "Medium" | "High");
                   setCurrentPageRecent(0);
-                  setCurrentPageExpired(0);
                 }}
                 className="appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-10 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               >
@@ -335,13 +396,13 @@ export default function AlertsPage() {
             <table className="w-full table-fixed">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="w-[30%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                  <th className="w-[25%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                     Alert Title
                   </th>
-                  <th className="w-[25%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                  <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                     Remaining Time
                   </th>
-                  <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                  <th className="w-[15%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                     Priority
                   </th>
                   <th className="w-[25%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
@@ -352,13 +413,13 @@ export default function AlertsPage() {
               <tbody>
                 {paginatedRecentAlerts.map((alert) => (
                   <tr key={alert._id} className="border-b border-slate-100 hover:bg-slate-50 h-16">
-                    <td className="w-[30%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
+                    <td className="w-[25%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
                       {alert.title}
                     </td>
-                    <td className="w-[25%] py-4 px-4 text-sm text-slate-600">
+                    <td className="w-[20%] py-4 px-4 text-sm text-slate-600">
                       {remainingTimes[alert._id] || "Loading..."}
                     </td>
-                    <td className="w-[20%] py-4 px-4">
+                    <td className="w-[15%] py-4 px-4">
                       <span
                         className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${getPriorityColor(
                           alert.priority
@@ -378,6 +439,13 @@ export default function AlertsPage() {
                           title="View Alert"
                         >
                           <LuEye className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleEditAlert(alert)}
+                          className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-blue-600 hover:bg-blue-100"
+                          title="Edit Alert"
+                        >
+                          <LuEdit2 className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteClick(alert)}
@@ -455,6 +523,12 @@ export default function AlertsPage() {
                     View
                   </button>
                   <button
+                    onClick={() => handleEditAlert(alert)}
+                    className="flex-1 rounded-lg border border-blue-200 bg-blue-50 py-2 text-xs font-bold text-blue-600 hover:bg-blue-100"
+                  >
+                    Edit
+                  </button>
+                  <button
                     onClick={() => handleDeleteClick(alert)}
                     className="flex-1 rounded-lg border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
                   >
@@ -507,6 +581,30 @@ export default function AlertsPage() {
                 </p>
               </div>
             </div>
+
+            {/* Expired Priority Filter */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 sm:justify-end">
+              <div className="relative inline-block">
+                <select
+                  value={expiredPriorityFilter}
+                  onChange={(e) => {
+                    setExpiredPriorityFilter(e.target.value as "All" | "Low" | "Medium" | "High");
+                    setCurrentPageExpired(0);
+                  }}
+                  className="appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-10 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="All">All Priorities</option>
+                  <option value="High">High Priority</option>
+                  <option value="Medium">Medium Priority</option>
+                  <option value="Low">Low Priority</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Desktop Table for Expired */}
@@ -515,14 +613,17 @@ export default function AlertsPage() {
               <table className="w-full table-fixed">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="w-[30%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
                       Alert Title
                     </th>
-                    <th className="w-[25%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                      Status
+                    <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                      Expired Date
+                    </th>
+                    <th className="w-[15%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                      Priority
                     </th>
                     <th className="w-[20%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                      Priority
+                      Status
                     </th>
                     <th className="w-[25%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
                       Action
@@ -532,13 +633,13 @@ export default function AlertsPage() {
                 <tbody>
                   {paginatedExpiredAlerts.map((alert) => (
                     <tr key={alert._id} className="border-b border-slate-100 hover:bg-slate-50 h-16">
-                      <td className="w-[30%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
+                      <td className="w-[20%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
                         {alert.title}
                       </td>
-                      <td className="w-[25%] py-4 px-4 text-sm text-red-600 font-semibold">
-                        Expired
+                      <td className="w-[20%] py-4 px-4 text-sm text-slate-600">
+                        {alert.expiresAt ? formatExpiredDate(alert.expiresAt) : "N/A"}
                       </td>
-                      <td className="w-[20%] py-4 px-4">
+                      <td className="w-[15%] py-4 px-4">
                         <span
                           className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${getPriorityColor(
                             alert.priority
@@ -546,6 +647,9 @@ export default function AlertsPage() {
                         >
                           {alert.priority}
                         </span>
+                      </td>
+                      <td className="w-[20%] py-4 px-4 text-sm text-red-600 font-semibold">
+                        Expired
                       </td>
                       <td className="w-[25%] py-4 px-4">
                         <div className="flex justify-center gap-2">
@@ -612,7 +716,9 @@ export default function AlertsPage() {
                   <div className="mb-3 flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-slate-900 truncate">{alert.title}</p>
-                      <p className="text-xs text-red-600 font-semibold mt-1">Expired</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {alert.expiresAt ? formatExpiredDate(alert.expiresAt) : "N/A"}
+                      </p>
                     </div>
                     <span
                       className={`inline-block rounded-full px-2 py-1 text-xs font-bold whitespace-nowrap ${getPriorityColor(
@@ -622,6 +728,7 @@ export default function AlertsPage() {
                       {alert.priority}
                     </span>
                   </div>
+                  <p className="text-xs text-red-600 font-semibold mb-3">Expired</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
@@ -673,7 +780,7 @@ export default function AlertsPage() {
         </div>
       )}
 
-      {/* Floating Action Button */}
+      {/* Fixed Floating Action Button */}
       <button
         onClick={() => {
           resetForm();
@@ -687,10 +794,12 @@ export default function AlertsPage() {
 
       {/* Create Alert Modal */}
       {createModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-lg">
-            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-black text-slate-900">Create New Alert</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-lg my-8">
+            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-6 z-10">
+              <h2 className="text-lg font-black text-slate-900">
+                {editingAlertId ? "Edit Alert" : "Create New Alert"}
+              </h2>
               <button
                 onClick={() => {
                   setCreateModalOpen(false);
@@ -887,14 +996,14 @@ export default function AlertsPage() {
                 )}
               </div>
 
-              {/* Buttons */}
-              <div className="flex gap-3 pt-4">
+              {/* Fixed Buttons at Bottom */}
+              <div className="sticky bottom-0 flex gap-3 pt-4 bg-white border-t border-slate-200 -mx-6 px-6 py-4">
                 <button
                   type="submit"
-                  disabled={sending}
+                  disabled={sending || pendingSendAlert}
                   className="flex-1 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {sending ? "Sending..." : "Send Alert"}
+                  {sending ? "Sending..." : editingAlertId ? "Update Alert" : "Send Alert"}
                 </button>
                 <button
                   type="button"
@@ -912,11 +1021,69 @@ export default function AlertsPage() {
         </div>
       )}
 
+      {/* Send Confirmation Modal */}
+      {sendConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-lg">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+              <h2 className="text-lg font-black text-slate-900">Confirm Send</h2>
+              <button
+                onClick={() => {
+                  setSendConfirmOpen(false);
+                  setPendingSendAlert(false);
+                }}
+                className="rounded-lg text-slate-500 hover:bg-slate-100"
+              >
+                <LuX className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="space-y-6 p-6">
+              <div>
+                <p className="text-sm font-bold text-slate-900 mb-2">
+                  Are you sure you want to {editingAlertId ? "update" : "send"} this alert?
+                </p>
+                <p className="text-xs text-slate-600">
+                  {editingAlertId
+                    ? "The updated alert information will be saved and sent to all configured recipients."
+                    : "This alert will be sent to all configured provinces and districts."
+                  }
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-blue-50 p-3 border border-blue-200">
+                <p className="text-xs font-bold text-blue-900">Title:</p>
+                <p className="text-sm text-blue-900 mt-1">{formData.title}</p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => {
+                    setSendConfirmOpen(false);
+                    setPendingSendAlert(false);
+                  }}
+                  className="flex-1 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmSendAlert}
+                  disabled={sending}
+                  className="flex-1 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sending ? "Processing..." : editingAlertId ? "Update Alert" : "Send Alert"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* View Alert Modal */}
       {viewModalOpen && selectedAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-lg">
-            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-lg my-8">
+            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-6 z-10">
               <h2 className="text-lg font-black text-slate-900">Alert Details</h2>
               <button
                 onClick={() => {
@@ -1008,13 +1175,13 @@ export default function AlertsPage() {
                 </div>
               )}
 
-              <div className="pt-4">
+              <div className="sticky bottom-0 pt-4 bg-white border-t border-slate-200 -mx-6 px-6 py-4">
                 <button
                   onClick={() => {
                     setViewModalOpen(false);
                     setSelectedAlert(null);
                   }}
-                  className="mt-6 w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700"
+                  className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700"
                 >
                   Close
                 </button>
