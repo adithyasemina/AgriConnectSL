@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+import { api } from "@/lib/api";
 
 function FarmersIcon() {
   return (
@@ -145,29 +143,11 @@ export default function OfficerDashboardPage() {
     try {
       setLoading(true);
 
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-      const response = await fetch(
-        `${API_BASE_URL}/api/officer/dashboard-stats`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to load dashboard stats");
-      }
+      const response = await api.get("/api/officer/dashboard-stats");
 
       setStats({
         ...defaultStats,
-        ...(data.stats || {}),
+        ...(response.data.stats || {}),
       });
     } catch (error) {
       console.error("Dashboard stats error:", error);
@@ -325,7 +305,7 @@ export default function OfficerDashboardPage() {
                                 : "bg-green-100 text-green-700"
                             }`}
                           >
-                            {farmer.status || "active"}
+                            {(farmer.status || "active").toUpperCase()}
                           </span>
                         </td>
 

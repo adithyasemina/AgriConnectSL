@@ -162,7 +162,6 @@ exports.getDashboardStats = async (req, res) => {
     });
 
     const pendingSoilTests = await SoilTest.countDocuments({
-      approvedOfficerId: officerId,
       status: "pending",
     });
 

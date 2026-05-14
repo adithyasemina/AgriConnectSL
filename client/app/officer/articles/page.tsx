@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+import { api } from "@/lib/api";
 
 function TrashIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -101,17 +99,18 @@ export default function ArticlesPage() {
     try {
       setFetching(true);
 
-      const response = await fetch(`${API_BASE_URL}/api/articles`);
+      const response = await api.get("/api/articles");
 
-      const data = await response.json();
+      setArticles(response.data.articles || []);
+      console.log("✅ Articles loaded:", response.data.articles?.length || 0);
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch articles";
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch articles");
-      }
-
-      setArticles(data.articles || []);
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to fetch articles");
+      console.error("❌ Failed to fetch articles:", errorMessage);
+      alert(errorMessage);
     } finally {
       setFetching(false);
     }
@@ -172,13 +171,17 @@ export default function ArticlesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.category || !formData.content) {
-      alert("Please fill title, category and content.");
+    const trimmedTitle = formData.title.trim();
+    const trimmedCategory = formData.category.trim();
+    const trimmedContent = formData.content.trim();
+
+    if (!trimmedTitle || !trimmedCategory || !trimmedContent) {
+      alert("Title, category, and content cannot be empty.");
       return;
     }
 
     if (!editingArticle && !imageFile) {
-      alert("Please select an article image.");
+      alert("Please select an article image for new articles.");
       return;
     }
 
@@ -186,36 +189,47 @@ export default function ArticlesPage() {
       setLoading(true);
 
       const submitData = new FormData();
-      submitData.append("title", formData.title);
-      submitData.append("category", formData.category);
-      submitData.append("content", formData.content);
+      submitData.append("title", trimmedTitle);
+      submitData.append("category", trimmedCategory);
+      submitData.append("content", trimmedContent);
 
       if (imageFile) {
         submitData.append("image", imageFile);
       }
 
-      const url = editingArticle
-        ? `${API_BASE_URL}/api/articles/${editingArticle._id}`
-        : `${API_BASE_URL}/api/articles`;
-
-      const method = editingArticle ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        body: submitData,
+      console.log("📤 Sending article request:", {
+        endpoint: editingArticle ? `PUT /api/articles/${editingArticle._id}` : "POST /api/articles",
+        payload: {
+          title: trimmedTitle,
+          category: trimmedCategory,
+          content: trimmedContent,
+          hasImage: !!imageFile,
+          imageFileName: imageFile?.name,
+        },
       });
 
-      const data = await response.json();
+      const response = editingArticle
+        ? await api.put(`/api/articles/${editingArticle._id}`, submitData)
+        : await api.post("/api/articles", submitData);
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to save article");
-      }
+      console.log("✅ Article saved successfully:", response.data);
 
       await fetchArticles();
-
       closeModal();
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to save article");
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to save article";
+
+      console.error("❌ Article save failed:", {
+        status: error.response?.status,
+        message: errorMessage,
+        fullError: error.response?.data,
+      });
+
+      alert(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -241,19 +255,18 @@ export default function ArticlesPage() {
     if (!confirmDelete) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/articles/${articleId}`, {
-        method: "DELETE",
-      });
+      await api.delete(`/api/articles/${articleId}`);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to delete article");
-      }
-
+      console.log("✅ Article deleted successfully");
       setArticles((prev) => prev.filter((article) => article._id !== articleId));
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to delete article");
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to delete article";
+
+      console.error("❌ Failed to delete article:", errorMessage);
+      alert(`Error: ${errorMessage}`);
     }
   };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { api } from "@/lib/api";
 
 export default function LeafDiseasePage() {
   const [image, setImage] = useState(null);
@@ -32,18 +33,9 @@ export default function LeafDiseasePage() {
       formData.append("image", image);
       formData.append("language", language);
 
-      const response = await fetch("http://localhost:5001/api/leaf/predict", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await api.post("/api/leaf/predict", formData);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Prediction failed");
-      }
-
-      setResult(data);
+      setResult(response.data);
     } catch (error) {
       alert(error.message);
     } finally {
