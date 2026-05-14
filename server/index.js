@@ -1,7 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+
 const connectDB = require("./config/db");
+
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const officerRoutes = require("./routes/officerRoutes");
@@ -9,8 +11,13 @@ const soilTestRoutes = require("./routes/soilTestRoutes");
 const chatbotRoute = require("./routes/chatbotRoute");
 const messageRoutes = require("./routes/messageRoutes");
 
+// NEW
+const leafRoutes = require("./routes/leafRoutes");
+
 dotenv.config();
+
 connectDB();
+
 const app = express();
 
 app.use(cors());
@@ -22,6 +29,9 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/officer", officerRoutes);
 app.use("/api/soil-tests", soilTestRoutes);
+
+// NEW
+app.use("/api/leaf", leafRoutes);
 
 app.get("/", (req, res) => {
   res.send("Agri Connect API is running");

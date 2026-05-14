@@ -1,4 +1,5 @@
-﻿type Language = "en" | "si";
+﻿"use client";
+type Language = "en" | "si";
 
 interface CommunitySectionProps {
   language: Language;
@@ -52,9 +53,9 @@ export default function CommunitySection({ language }: CommunitySectionProps) {
             <div className="absolute inset-0">
               {avatarColors.map((color, i) => {
                 const angle = (i / avatarColors.length) * Math.PI * 2;
-                const radius = window.innerWidth < 640 ? 50 : 70;
-                const x = Math.cos(angle) * radius;
-                const y = Math.sin(angle) * radius;
+                const radius = 70;
+                const x = Math.round(Math.cos(angle) * radius * 10000) / 10000;
+                const y = Math.round(Math.sin(angle) * radius * 10000) / 10000;
                 return (
                   <div
                     key={i}
