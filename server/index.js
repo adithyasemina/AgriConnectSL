@@ -6,6 +6,7 @@ const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const officerRoutes = require("./routes/officerRoutes");
 const soilTestRoutes = require("./routes/soilTestRoutes");
+const chatbotRoute = require("./routes/chatbotRoute");
 
 dotenv.config();
 connectDB();
@@ -14,6 +15,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use("/api", chatbotRoute);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/officer", officerRoutes);
