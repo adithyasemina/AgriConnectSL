@@ -1,10 +1,73 @@
 const SoilTest = require("../models/SoilTest");
 const SoilNotification = require("../models/SoilNotification");
+const OfficerNumber = require("../models/OfficerNumber");
 
-// Get pending soil tests
+const getTime = () =>
+  new Date().toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+const getOfficerDistrict = (req) => req.user?.district;
+
+const getOfficerName = (user) =>
+  `${user.firstName || ""} ${user.lastName || ""}`.trim();
+
+exports.issueOfficerNumber = async (req, res) => {
+  try {
+    const { number } = req.body;
+
+    if (!number || !number.trim()) {
+      return res.status(400).json({
+        message: "Officer number is required",
+      });
+    }
+
+    const exists = await OfficerNumber.findOne({
+      number: number.trim(),
+    });
+
+    if (exists) {
+      return res.status(400).json({
+        message: "Officer number already exists",
+      });
+    }
+
+    const officerNumber = await OfficerNumber.create({
+      number: number.trim(),
+      officerId: req.user._id,
+      officerName: getOfficerName(req.user),
+      province: req.user.province,
+      district: req.user.district,
+    });
+
+    return res.status(201).json({
+      message: "Officer number issued successfully",
+      officerNumber,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to issue officer number",
+      error: error.message,
+    });
+  }
+};
+
 exports.getPendingSoilTests = async (req, res) => {
   try {
-    const soilTests = await SoilTest.find({ status: "pending" })
+    const officerDistrict = getOfficerDistrict(req);
+
+    if (!officerDistrict) {
+      return res.status(400).json({
+        message: "Officer district not found",
+      });
+    }
+
+    const soilTests = await SoilTest.find({
+      status: "pending",
+      district: officerDistrict,
+    })
       .populate("farmerId", "-password")
       .sort({ submitDate: -1 });
 
@@ -13,7 +76,6 @@ exports.getPendingSoilTests = async (req, res) => {
       soilTests,
     });
   } catch (error) {
-    console.error("Get pending soil tests error:", error.message);
     return res.status(500).json({
       message: "Failed to retrieve pending soil tests",
       error: error.message,
@@ -21,10 +83,20 @@ exports.getPendingSoilTests = async (req, res) => {
   }
 };
 
-// Get completed soil tests
 exports.getCompletedSoilTests = async (req, res) => {
   try {
-    const soilTests = await SoilTest.find({ status: "completed" })
+    const officerDistrict = getOfficerDistrict(req);
+
+    if (!officerDistrict) {
+      return res.status(400).json({
+        message: "Officer district not found",
+      });
+    }
+
+    const soilTests = await SoilTest.find({
+      status: "completed",
+      district: officerDistrict,
+    })
       .populate("farmerId", "-password")
       .populate("approvedOfficerId", "-password")
       .sort({ completedDate: -1 });
@@ -34,7 +106,6 @@ exports.getCompletedSoilTests = async (req, res) => {
       soilTests,
     });
   } catch (error) {
-    console.error("Get completed soil tests error:", error.message);
     return res.status(500).json({
       message: "Failed to retrieve completed soil tests",
       error: error.message,
@@ -42,63 +113,73 @@ exports.getCompletedSoilTests = async (req, res) => {
   }
 };
 
-// Get recalled soil tests
-exports.getRecalledSoilTests = async (req, res) => {
-  try {
-    const soilTests = await SoilTest.find({ status: "recall" })
-      .populate("farmerId", "-password")
-      .populate("recallOfficerId", "-password")
-      .sort({ recallDate: -1 });
-
-    return res.status(200).json({
-      message: "Recalled soil tests retrieved successfully",
-      soilTests,
-    });
-  } catch (error) {
-    console.error("Get recalled soil tests error:", error.message);
-    return res.status(500).json({
-      message: "Failed to retrieve recalled soil tests",
-      error: error.message,
-    });
-  }
-};
-
-// Create soil test
 exports.createSoilTest = async (req, res) => {
   try {
-    const { farmerId, farmerName, farmerEmail, farmerNote } = req.body;
-
-    if (!farmerId || !farmerName || !farmerEmail) {
-      return res.status(400).json({
-        message: "Farmer ID, name, and email are required",
-      });
-    }
-
-    const now = new Date();
-    const submitTime = now.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-
-    const soilTest = new SoilTest({
+    const {
       farmerId,
       farmerName,
       farmerEmail,
-      farmerNote: farmerNote || "",
-      status: "pending",
-      submitDate: now,
-      submitTime: submitTime,
+      province,
+      district,
+      farmerNumber,
+      farmerNote,
+    } = req.body;
+
+    if (
+      !farmerId ||
+      !farmerName ||
+      !farmerEmail ||
+      !province ||
+      !district ||
+      !farmerNumber
+    ) {
+      return res.status(400).json({
+        message:
+          "Farmer ID, name, email, province, district, and farmer number are required",
+      });
+    }
+
+    const issuedNumber = await OfficerNumber.findOne({
+      number: farmerNumber.trim(),
+      province,
+      district,
     });
 
-    await soilTest.save();
+    if (!issuedNumber) {
+      return res.status(400).json({
+        message: "Invalid officer number",
+      });
+    }
+
+    if (issuedNumber.isUsed) {
+      return res.status(400).json({
+        message: "This officer number has already been used",
+      });
+    }
+
+    const soilTest = await SoilTest.create({
+      farmerId,
+      farmerName,
+      farmerEmail,
+      province,
+      district,
+      farmerNumber: farmerNumber.trim(),
+      farmerNote: farmerNote || "",
+      status: "pending",
+      submitDate: new Date(),
+      submitTime: getTime(),
+    });
+
+    issuedNumber.isUsed = true;
+    issuedNumber.usedByFarmerId = farmerId;
+    issuedNumber.usedAt = new Date();
+    await issuedNumber.save();
 
     return res.status(201).json({
-      message: "Soil test created successfully",
+      message: "Soil test request submitted successfully",
       soilTest,
     });
   } catch (error) {
-    console.error("Create soil test error:", error.message);
     return res.status(500).json({
       message: "Failed to create soil test",
       error: error.message,
@@ -106,10 +187,10 @@ exports.createSoilTest = async (req, res) => {
   }
 };
 
-// Complete soil test
 exports.completeSoilTest = async (req, res) => {
   try {
     const { id } = req.params;
+
     const {
       phLevel,
       nitrogen,
@@ -133,18 +214,28 @@ exports.completeSoilTest = async (req, res) => {
       });
     }
 
-    const soilTest = await SoilTest.findById(id);
+    const officerDistrict = getOfficerDistrict(req);
+
+    if (!officerDistrict) {
+      return res.status(400).json({
+        message: "Officer district not found",
+      });
+    }
+
+    const soilTest = await SoilTest.findOne({
+      _id: id,
+      status: "pending",
+      district: officerDistrict,
+    });
 
     if (!soilTest) {
       return res.status(404).json({
-        message: "Soil test not found",
+        message: "Soil test not found for your district",
       });
     }
 
     const officerId = req.user?._id;
-    const officerName = req.user
-      ? `${req.user.firstName} ${req.user.lastName}`
-      : "Unknown Officer";
+    const officerName = getOfficerName(req.user) || "Unknown Officer";
 
     soilTest.status = "completed";
     soilTest.phLevel = phLevel;
@@ -154,33 +245,24 @@ exports.completeSoilTest = async (req, res) => {
     soilTest.overallStatus = overallStatus;
     soilTest.recommendation = recommendation || "";
     soilTest.reason = reason || "";
-    soilTest.approvedOfficerId = officerId;
+    soilTest.approvedOfficerId = officerId || null;
     soilTest.approvedOfficerName = officerName;
-
-    const now = new Date();
-    soilTest.completedDate = now;
-    soilTest.completedTime = now.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    soilTest.completedDate = new Date();
+    soilTest.completedTime = getTime();
 
     await soilTest.save();
 
-    // Create notification
-    const notification = new SoilNotification({
+    const notification = await SoilNotification.create({
       farmerId: soilTest.farmerId,
       farmerName: soilTest.farmerName,
       title: "Soil Test Results",
-      message: `Your soil test has been completed. Overall Status: ${overallStatus}. Please check the details for recommendations.`,
+      message: `Your soil test has been completed. Overall Status: ${overallStatus}.`,
       type: "soil_completed",
       soilTestId: soilTest._id,
-      officerId: officerId,
-      officerName: officerName,
+      officerId,
+      officerName,
       isRead: false,
     });
-
-    await notification.save();
 
     return res.status(200).json({
       message: "Soil test completed successfully",
@@ -188,7 +270,6 @@ exports.completeSoilTest = async (req, res) => {
       notification,
     });
   } catch (error) {
-    console.error("Complete soil test error:", error.message);
     return res.status(500).json({
       message: "Failed to complete soil test",
       error: error.message,
@@ -196,79 +277,10 @@ exports.completeSoilTest = async (req, res) => {
   }
 };
 
-// Recall soil test
-exports.recallSoilTest = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { reason } = req.body;
-
-    if (!reason || reason.trim() === "") {
-      return res.status(400).json({
-        message: "Reason is required",
-      });
-    }
-
-    const soilTest = await SoilTest.findById(id);
-
-    if (!soilTest) {
-      return res.status(404).json({
-        message: "Soil test not found",
-      });
-    }
-
-    const officerId = req.user?._id;
-    const officerName = req.user
-      ? `${req.user.firstName} ${req.user.lastName}`
-      : "Unknown Officer";
-
-    soilTest.status = "recall";
-    soilTest.reason = reason.trim();
-    soilTest.recallOfficerId = officerId;
-    soilTest.recallOfficerName = officerName;
-
-    const now = new Date();
-    soilTest.recallDate = now;
-    soilTest.recallTime = now.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-
-    await soilTest.save();
-
-    // Create notification
-    const notification = new SoilNotification({
-      farmerId: soilTest.farmerId,
-      farmerName: soilTest.farmerName,
-      title: "Soil Test Re-Call Request",
-      message: `Your soil test has been recalled. Reason: ${reason}. Please submit your soil sample again.`,
-      type: "soil_recall",
-      soilTestId: soilTest._id,
-      officerId: officerId,
-      officerName: officerName,
-      isRead: false,
-    });
-
-    await notification.save();
-
-    return res.status(200).json({
-      message: "Soil test recalled successfully",
-      soilTest,
-      notification,
-    });
-  } catch (error) {
-    console.error("Recall soil test error:", error.message);
-    return res.status(500).json({
-      message: "Failed to recall soil test",
-      error: error.message,
-    });
-  }
-};
-
-// Update completed soil test
 exports.updateCompletedSoilTest = async (req, res) => {
   try {
     const { id } = req.params;
+
     const {
       phLevel,
       nitrogen,
@@ -279,21 +291,26 @@ exports.updateCompletedSoilTest = async (req, res) => {
       reason,
     } = req.body;
 
-    const soilTest = await SoilTest.findById(id);
+    const officerDistrict = getOfficerDistrict(req);
+
+    if (!officerDistrict) {
+      return res.status(400).json({
+        message: "Officer district not found",
+      });
+    }
+
+    const soilTest = await SoilTest.findOne({
+      _id: id,
+      status: "completed",
+      district: officerDistrict,
+    });
 
     if (!soilTest) {
       return res.status(404).json({
-        message: "Soil test not found",
+        message: "Completed soil test not found for your district",
       });
     }
 
-    if (soilTest.status !== "completed") {
-      return res.status(400).json({
-        message: "Can only update completed soil tests",
-      });
-    }
-
-    // Update fields
     if (phLevel !== undefined) soilTest.phLevel = phLevel;
     if (nitrogen !== undefined) soilTest.nitrogen = nitrogen;
     if (phosphorus !== undefined) soilTest.phosphorus = phosphorus;
@@ -309,7 +326,6 @@ exports.updateCompletedSoilTest = async (req, res) => {
       soilTest,
     });
   } catch (error) {
-    console.error("Update completed soil test error:", error.message);
     return res.status(500).json({
       message: "Failed to update completed soil test",
       error: error.message,
@@ -317,81 +333,6 @@ exports.updateCompletedSoilTest = async (req, res) => {
   }
 };
 
-// Update recalled soil test
-exports.updateRecalledSoilTest = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { reason } = req.body;
-
-    const soilTest = await SoilTest.findById(id);
-
-    if (!soilTest) {
-      return res.status(404).json({
-        message: "Soil test not found",
-      });
-    }
-
-    if (soilTest.status !== "recall") {
-      return res.status(400).json({
-        message: "Can only update recalled soil tests",
-      });
-    }
-
-    if (reason !== undefined) {
-      soilTest.reason = reason;
-    }
-
-    await soilTest.save();
-
-    return res.status(200).json({
-      message: "Recalled soil test updated successfully",
-      soilTest,
-    });
-  } catch (error) {
-    console.error("Update recalled soil test error:", error.message);
-    return res.status(500).json({
-      message: "Failed to update recalled soil test",
-      error: error.message,
-    });
-  }
-};
-
-// Re-pending soil test (move completed/recalled back to pending)
-exports.rePendingSoilTest = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const soilTest = await SoilTest.findById(id);
-
-    if (!soilTest) {
-      return res.status(404).json({
-        message: "Soil test not found",
-      });
-    }
-
-    if (soilTest.status !== "completed" && soilTest.status !== "recall") {
-      return res.status(400).json({
-        message: "Can only re-pending completed or recalled soil tests",
-      });
-    }
-
-    soilTest.status = "pending";
-    soilTest.save();
-
-    return res.status(200).json({
-      message: "Soil test moved to pending successfully",
-      soilTest,
-    });
-  } catch (error) {
-    console.error("Re-pending soil test error:", error.message);
-    return res.status(500).json({
-      message: "Failed to move soil test to pending",
-      error: error.message,
-    });
-  }
-};
-
-// Get soil notifications for farmer
 exports.getFarmerSoilNotifications = async (req, res) => {
   try {
     const { farmerId } = req.params;
@@ -405,7 +346,6 @@ exports.getFarmerSoilNotifications = async (req, res) => {
       notifications,
     });
   } catch (error) {
-    console.error("Get soil notifications error:", error.message);
     return res.status(500).json({
       message: "Failed to retrieve soil notifications",
       error: error.message,

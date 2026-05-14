@@ -10,10 +10,27 @@ const soilTestSchema = new mongoose.Schema(
     farmerName: {
       type: String,
       required: true,
+      trim: true,
     },
     farmerEmail: {
       type: String,
       required: true,
+      trim: true,
+    },
+    province: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    district: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    farmerNumber: {
+      type: String,
+      required: true,
+      trim: true,
     },
     farmerNote: {
       type: String,
@@ -27,13 +44,11 @@ const soilTestSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-
     status: {
       type: String,
       enum: ["pending", "completed", "recall"],
       default: "pending",
     },
-
     approvedOfficerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -43,17 +58,6 @@ const soilTestSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-
-    recallOfficerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
-    },
-    recallOfficerName: {
-      type: String,
-      default: "",
-    },
-
     completedDate: {
       type: Date,
       default: null,
@@ -62,16 +66,6 @@ const soilTestSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-
-    recallDate: {
-      type: Date,
-      default: null,
-    },
-    recallTime: {
-      type: String,
-      default: "",
-    },
-
     phLevel: {
       type: Number,
       default: null,
