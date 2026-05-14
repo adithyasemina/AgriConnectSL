@@ -183,7 +183,7 @@ export default function OfficerDashboardPage() {
   }, [stats]);
 
   return (
-    <div className="min-h-[calc(100vh-96px)] bg-slate-50 px-6 py-8">
+    <div className="min-h-[calc(100vh-96px)] bg-slate-50 px-6 py-8 lg:p-0">
       <div className="mx-auto max-w-[1280px] space-y-7">
         <section className="rounded-[2rem] bg-gradient-to-br from-blue-600 to-blue-400 p-7 shadow-xl shadow-blue-100 sm:p-9">
           <h1 className="text-4xl font-black text-white">
