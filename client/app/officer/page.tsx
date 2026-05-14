@@ -211,7 +211,7 @@ export default function OfficerDashboardPage() {
           </h1>
 
           <p className="mt-3 text-lg font-medium text-white/85">
-            Here's what is happening with farmer support today.
+            Here is what is happening with farmer support today.
           </p>
 
           <div className="mt-9 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
