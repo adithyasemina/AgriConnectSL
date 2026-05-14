@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 function TrashIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -52,175 +55,448 @@ function PlusIcon({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
+function CloseIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
 type Article = {
-  id: number;
+  _id: string;
   title: string;
   category: string;
-  description: string;
   content: string;
-  status: "Published" | "Draft";
-  lastUpdated: string;
+  imageUrl: string;
+  imagePath?: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
-const sampleArticles: Article[] = [
-  {
-    id: 1,
-    title: "Nitrogen Management in Paddy Fields",
-    category: "Crop Management",
-    description: "Best practices for nitrogen application in paddy cultivation.",
-    content: "Nitrogen is a critical nutrient for paddy cultivation...",
-    status: "Published",
-    lastUpdated: "2024-01-20",
-  },
-  {
-    id: 2,
-    title: "Pest Management: Fall Armyworm",
-    category: "Pest Control",
-    description: "Strategies to control fall armyworm in maize and other crops.",
-    content: "Fall armyworm is a destructive pest that...",
-    status: "Published",
-    lastUpdated: "2024-01-18",
-  },
-  {
-    id: 3,
-    title: "Organic Farming Introduction",
-    category: "Organic Farming",
-    description: "Getting started with organic farming practices.",
-    content: "Organic farming is an agricultural approach...",
-    status: "Published",
-    lastUpdated: "2024-01-15",
-  },
-];
-
 export default function ArticlesPage() {
-  const [articles, setArticles] = useState<Article[]>(sampleArticles);
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [editingArticle, setEditingArticle] = useState<Article | null>(null);
+
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+
   const [formData, setFormData] = useState({
     title: "",
     category: "Crop Management",
-    description: "",
     content: "",
-    status: "Published" as "Published" | "Draft",
   });
 
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+
+  const fetchArticles = async () => {
+    try {
+      setFetching(true);
+
+      const response = await fetch(`${API_BASE_URL}/api/articles`);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch articles");
+      }
+
+      setArticles(data.articles || []);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to fetch articles");
+    } finally {
+      setFetching(false);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetchArticles();
+  }, []);
+
+  const openCreateModal = () => {
+    setEditingArticle(null);
+
+    setFormData({
+      title: "",
+      category: "Crop Management",
+      content: "",
+    });
+
+    setImageFile(null);
+    setImagePreview("");
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingArticle(null);
+
+    setFormData({
+      title: "",
+      category: "Crop Management",
+      content: "",
+    });
+
+    setImageFile(null);
+    setImagePreview("");
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.description || !formData.content) {
+    if (!formData.title || !formData.category || !formData.content) {
+      alert("Please fill title, category and content.");
       return;
     }
 
-    if (editingId) {
-      setArticles(
-        articles.map((article) =>
-          article.id === editingId
-            ? {
-                ...article,
-                ...formData,
-                lastUpdated: new Date().toISOString().split("T")[0],
-              }
-            : article
-        )
-      );
-      setEditingId(null);
-    } else {
-      const newArticle: Article = {
-        id: Math.max(...articles.map((a) => a.id), 0) + 1,
-        ...formData,
-        lastUpdated: new Date().toISOString().split("T")[0],
-      };
-      setArticles([newArticle, ...articles]);
+    if (!editingArticle && !imageFile) {
+      alert("Please select an article image.");
+      return;
     }
 
-    setFormData({
-      title: "",
-      category: "Crop Management",
-      description: "",
-      content: "",
-      status: "Published",
-    });
-    setShowForm(false);
+    try {
+      setLoading(true);
+
+      const submitData = new FormData();
+      submitData.append("title", formData.title);
+      submitData.append("category", formData.category);
+      submitData.append("content", formData.content);
+
+      if (imageFile) {
+        submitData.append("image", imageFile);
+      }
+
+      const url = editingArticle
+        ? `${API_BASE_URL}/api/articles/${editingArticle._id}`
+        : `${API_BASE_URL}/api/articles`;
+
+      const method = editingArticle ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        body: submitData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to save article");
+      }
+
+      await fetchArticles();
+
+      closeModal();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to save article");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEdit = (article: Article) => {
+    setEditingArticle(article);
+
     setFormData({
       title: article.title,
       category: article.category,
-      description: article.description,
       content: article.content,
-      status: article.status,
     });
-    setEditingId(article.id);
-    setShowForm(true);
+
+    setImageFile(null);
+    setImagePreview(article.imageUrl || "");
+    setShowModal(true);
   };
 
-  const handleDelete = (id: number) => {
-    setArticles(articles.filter((article) => article.id !== id));
-  };
+  const handleDelete = async (articleId: string) => {
+    const confirmDelete = confirm("Are you sure you want to delete this article?");
 
-  const handleCancel = () => {
-    setShowForm(false);
-    setEditingId(null);
-    setFormData({
-      title: "",
-      category: "Crop Management",
-      description: "",
-      content: "",
-      status: "Published",
-    });
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/articles/${articleId}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete article");
+      }
+
+      setArticles((prev) => prev.filter((article) => article._id !== articleId));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to delete article");
+    }
   };
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
-        {!showForm && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white hover:bg-blue-700"
-          >
-            <PlusIcon />
-            New Article
-          </button>
-        )}
-      </div>
+    <div className="min-h-[calc(100vh-96px)] bg-slate-50 px-6 py-8 lg:p-0">
+      <div className="mx-auto max-w-[1280px]">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="px-11 pb-6 pt-8">
+            <div className="mb-9">
+              <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">
+                Articles
+              </h2>
 
-      {/* Form */}
-      {showForm && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-6 text-lg font-black text-slate-900">
-            {editingId ? "Edit Article" : "Create New Article"}
-          </h2>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">
-                Title
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                placeholder="Article title..."
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-              />
+              <p className="mt-1 text-sm font-semibold uppercase text-slate-500">
+                {articles.length} Articles <span className="text-green-500">●</span>
+              </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="hidden md:block">
+              <table className="w-full table-fixed">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="w-[38%] px-4 py-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                      Title
+                    </th>
+
+                    <th className="w-[24%] px-4 py-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                      Category
+                    </th>
+
+                    <th className="w-[22%] px-4 py-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                      Last Updated
+                    </th>
+
+                    <th className="w-[16%] px-4 py-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {fetching && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-4 py-12 text-center text-sm font-semibold text-slate-500"
+                      >
+                        Loading articles...
+                      </td>
+                    </tr>
+                  )}
+
+                  {!fetching &&
+                    articles.map((article) => (
+                      <tr key={article._id} className="border-b border-slate-100">
+                        <td className="px-4 py-5">
+                          <div className="flex items-center gap-4">
+                            {article.imageUrl ? (
+                              <img
+                                src={article.imageUrl}
+                                alt={article.title}
+                                className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xs font-black text-blue-700">
+                                IMG
+                              </div>
+                            )}
+
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-black text-slate-950">
+                                {article.title}
+                              </p>
+
+                              <p className="mt-1 truncate text-sm font-medium text-slate-500">
+                                {article.content}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-5 text-sm font-medium text-slate-700">
+                          {article.category}
+                        </td>
+
+                        <td className="px-4 py-5 text-sm font-medium text-slate-700">
+                          {new Date(article.updatedAt).toLocaleDateString()}
+                        </td>
+
+                        <td className="px-4 py-5">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleEdit(article)}
+                              className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100"
+                              title="Edit Article"
+                            >
+                              <EditIcon />
+                            </button>
+
+                            <button
+                              onClick={() => handleDelete(article._id)}
+                              className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                              title="Delete Article"
+                            >
+                              <TrashIcon />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+
+                  {!fetching && articles.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-4 py-12 text-center text-sm font-medium text-slate-500"
+                      >
+                        No articles available.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="space-y-4 md:hidden">
+              {fetching && (
+                <div className="rounded-2xl border border-slate-200 p-6 text-center text-sm font-semibold text-slate-500">
+                  Loading articles...
+                </div>
+              )}
+
+              {!fetching &&
+                articles.map((article) => (
+                  <div
+                    key={article._id}
+                    className="rounded-2xl border border-slate-200 p-4"
+                  >
+                    {article.imageUrl && (
+                      <img
+                        src={article.imageUrl}
+                        alt={article.title}
+                        className="mb-4 h-44 w-full rounded-2xl object-cover"
+                      />
+                    )}
+
+                    <p className="font-black text-slate-900">{article.title}</p>
+
+                    <p className="mt-1 line-clamp-2 text-sm text-slate-500">
+                      {article.content}
+                    </p>
+
+                    <div className="mt-4 flex items-center justify-between text-sm">
+                      <span className="font-semibold text-slate-600">
+                        {article.category}
+                      </span>
+
+                      <span className="text-slate-500">
+                        {new Date(article.updatedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        onClick={() => handleEdit(article)}
+                        className="flex-1 rounded-xl border border-blue-200 bg-blue-50 py-2 text-xs font-bold text-blue-600"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(article._id)}
+                        className="flex-1 rounded-xl border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-600"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+              {!fetching && articles.length === 0 && (
+                <div className="rounded-2xl border border-slate-200 p-6 text-center text-sm font-medium text-slate-500">
+                  No articles available.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end border-t border-slate-100 px-7 py-6">
+            <button
+              onClick={openCreateModal}
+              className="flex h-14 items-center justify-center gap-3 rounded-2xl bg-blue-600 px-8 text-base font-black text-white shadow-lg shadow-blue-100 hover:bg-blue-700"
+            >
+              <PlusIcon className="h-6 w-6" />
+              Create Article
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="mb-6 flex items-center justify-between">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">
+                <h2 className="text-xl font-black text-slate-900">
+                  {editingArticle ? "Edit Article" : "Create Article"}
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Add article title, category, image and content.
+                </p>
+              </div>
+
+              <button
+                onClick={closeModal}
+                className="rounded-xl border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-bold text-slate-700">
+                  Article Title
+                </label>
+
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  placeholder="Enter article title"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-slate-700">
                   Category
                 </label>
+
                 <select
                   name="category"
                   value={formData.category}
@@ -229,6 +505,7 @@ export default function ArticlesPage() {
                 >
                   <option>Crop Management</option>
                   <option>Pest Control</option>
+                  <option>Disease Control</option>
                   <option>Organic Farming</option>
                   <option>Soil Health</option>
                   <option>Weather</option>
@@ -236,205 +513,69 @@ export default function ArticlesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Status
+                <label className="mb-2 block text-sm font-bold text-slate-700">
+                  Article Image
                 </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                >
-                  <option>Published</option>
-                  <option>Draft</option>
-                </select>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none file:mr-4 file:rounded-xl file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-bold file:text-blue-700 hover:file:bg-blue-100"
+                />
+
+                {imagePreview && (
+                  <div className="mt-4">
+                    <img
+                      src={imagePreview}
+                      alt="Article preview"
+                      className="h-56 w-full rounded-2xl object-cover"
+                    />
+                  </div>
+                )}
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">
-                Short Description
-              </label>
-              <input
-                type="text"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                placeholder="Brief description of the article..."
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
+              <div>
+                <label className="mb-2 block text-sm font-bold text-slate-700">
+                  Content
+                </label>
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">
-                Content
-              </label>
-              <textarea
-                name="content"
-                value={formData.content}
-                onChange={handleInputChange}
-                placeholder="Write your article content..."
-                rows={8}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
-              />
-            </div>
+                <textarea
+                  name="content"
+                  value={formData.content}
+                  onChange={handleInputChange}
+                  placeholder="Write article content..."
+                  rows={7}
+                  className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
 
-            <div className="flex gap-3 pt-4">
-              <button
-                type="submit"
-                className="flex-1 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white hover:bg-blue-700"
-              >
-                {editingId ? "Update Article" : "Publish Article"}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="flex-1 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-600 hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+              <div className="flex flex-col gap-3 pt-4 sm:flex-row">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+                >
+                  {loading
+                    ? "Saving..."
+                    : editingArticle
+                    ? "Update Article"
+                    : "Publish Article"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  disabled={loading}
+                  className="flex-1 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-black text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
-
-      {/* Articles List */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="p-6">
-          <h2 className="mb-6 text-lg font-black text-slate-900">
-            Articles ({articles.length})
-          </h2>
-
-          {/* Desktop Table */}
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full table-fixed">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="w-[35%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Title
-                  </th>
-                  <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Category
-                  </th>
-                  <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Status
-                  </th>
-                  <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Last Updated
-                  </th>
-                  <th className="w-[15%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {articles.map((article) => (
-                  <tr
-                    key={article.id}
-                    className="border-b border-slate-100 hover:bg-slate-50"
-                  >
-                    <td className="w-[35%] py-4 px-4">
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-slate-900 truncate">
-                          {article.title}
-                        </p>
-                        <p className="text-xs text-slate-500 truncate">
-                          {article.description}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="w-[18%] py-4 px-4 text-sm text-slate-600 truncate">
-                      {article.category}
-                    </td>
-                    <td className="w-[14%] py-4 px-4">
-                      <span
-                        className={`inline-block rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap ${
-                          article.status === "Published"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-slate-100 text-slate-700"
-                        }`}
-                      >
-                        {article.status}
-                      </span>
-                    </td>
-                    <td className="w-[18%] py-4 px-4 text-sm text-slate-600 truncate">
-                      {new Date(article.lastUpdated).toLocaleDateString()}
-                    </td>
-                    <td className="w-[15%] py-4 px-4">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEdit(article)}
-                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
-                        >
-                          <EditIcon className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(article.id)}
-                          className="rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white hover:bg-red-700"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="space-y-4 md:hidden">
-            {articles.map((article) => (
-              <div
-                key={article.id}
-                className="rounded-2xl border border-slate-200 p-4"
-              >
-                <div className="mb-3">
-                  <p className="font-bold text-slate-900 truncate">{article.title}</p>
-                  <p className="text-xs text-slate-500 line-clamp-2">
-                    {article.description}
-                  </p>
-                </div>
-
-                <div className="mb-4 flex items-center justify-between gap-2 text-xs">
-                  <span className="text-slate-600 truncate">{article.category}</span>
-                  <span
-                    className={`rounded-full px-2 py-1 font-bold ${
-                      article.status === "Published"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-slate-100 text-slate-700"
-                    }`}
-                  >
-                    {article.status}
-                  </span>
-                </div>
-
-                <div className="mb-4 border-t border-slate-100 pt-3">
-                  <p className="text-xs text-slate-500">Updated</p>
-                  <p className="font-bold text-slate-900">
-                    {new Date(article.lastUpdated).toLocaleDateString()}
-                  </p>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(article)}
-                    className="flex-1 rounded-lg border border-slate-200 bg-white py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(article.id)}
-                    className="flex-1 rounded-lg bg-red-600 py-2 text-xs font-bold text-white hover:bg-red-700"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

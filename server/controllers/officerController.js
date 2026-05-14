@@ -1,5 +1,8 @@
 const User = require("../models/User");
 const Alert = require("../models/Alert");
+const SoilTest = require("../models/SoilTest");
+const Message = require("../models/Message");
+const Article = require("../models/Article");
 
 exports.getUnblockedFarmers = async (req, res) => {
   try {
@@ -63,9 +66,7 @@ exports.blockFarmer = async (req, res) => {
     }
 
     if (farmer.role !== "farmer") {
-      return res
-        .status(400)
-        .json({ message: "Only farmers can be blocked" });
+      return res.status(400).json({ message: "Only farmers can be blocked" });
     }
 
     farmer.isBlocked = true;
@@ -103,9 +104,7 @@ exports.unblockFarmer = async (req, res) => {
     }
 
     if (farmer.role !== "farmer") {
-      return res
-        .status(400)
-        .json({ message: "Only farmers can be unblocked" });
+      return res.status(400).json({ message: "Only farmers can be unblocked" });
     }
 
     farmer.isBlocked = false;
@@ -134,29 +133,84 @@ exports.unblockFarmer = async (req, res) => {
 
 exports.getDashboardStats = async (req, res) => {
   try {
+    const officerId = req.user._id;
+
     const totalFarmers = await User.countDocuments({
       role: "farmer",
-      isBlocked: { $ne: true },
+      $or: [{ isActive: true }, { isBlocked: true }],
     });
 
-    const blockedFarmers = await User.countDocuments({
+    const latestFarmers = await User.find({
       role: "farmer",
-      isBlocked: true,
+      $or: [{ isActive: true }, { isBlocked: true }],
+    })
+      .select("firstName lastName email isActive isBlocked createdAt")
+      .sort({ createdAt: -1 })
+      .limit(4);
+
+    const formattedLatestFarmers = latestFarmers.map((farmer) => ({
+      _id: farmer._id,
+      name: `${farmer.firstName} ${farmer.lastName}`,
+      email: farmer.email,
+      status: farmer.isBlocked ? "blocked" : "active",
+      createdAt: farmer.createdAt,
+    }));
+
+    const completedSoilTests = await SoilTest.countDocuments({
+      approvedOfficerId: officerId,
+      status: "completed",
+    });
+
+    const pendingSoilTests = await SoilTest.countDocuments({
+      approvedOfficerId: officerId,
+      status: "pending",
+    });
+
+    const officerMessages = await Message.find({
+      assignedOfficerId: officerId,
+    }).select("farmerId status");
+
+    const uniqueFarmers = new Set();
+    let completedMessages = 0;
+    let pendingMessages = 0;
+
+    officerMessages.forEach((message) => {
+      if (message.farmerId) {
+        uniqueFarmers.add(String(message.farmerId));
+      }
+
+      if (message.status === "done") {
+        completedMessages += 1;
+      } else {
+        pendingMessages += 1;
+      }
+    });
+
+    const totalMessages = uniqueFarmers.size;
+
+    const totalArticles = await Article.countDocuments({
+      createdBy: officerId,
     });
 
     return res.status(200).json({
+      success: true,
       message: "Dashboard stats fetched successfully",
       stats: {
         totalFarmers,
-        blockedFarmers,
-        totalMessages: 48,
-        totalSoilTests: 32,
-        totalArticles: 15,
+        totalMessages,
+        completedSoilTests,
+        totalArticles,
+        completedMessages,
+        pendingSoilTests,
+        pendingMessages,
+        latestFarmers: formattedLatestFarmers,
       },
     });
   } catch (error) {
     console.error("Get dashboard stats error:", error.message);
+
     return res.status(500).json({
+      success: false,
       message: "Failed to fetch dashboard stats",
       error: error.message,
     });
@@ -165,7 +219,15 @@ exports.getDashboardStats = async (req, res) => {
 
 exports.createAlert = async (req, res) => {
   try {
-    const { title, message, priority, targetType, targetProvinces, targetDistricts, expiresAt } = req.body;
+    const {
+      title,
+      message,
+      priority,
+      targetType,
+      targetProvinces,
+      targetDistricts,
+      expiresAt,
+    } = req.body;
 
     if (!title || !message || !priority || !targetType) {
       return res.status(400).json({
@@ -173,13 +235,19 @@ exports.createAlert = async (req, res) => {
       });
     }
 
-    if (targetType === "provinces" && (!targetProvinces || targetProvinces.length === 0)) {
+    if (
+      targetType === "provinces" &&
+      (!targetProvinces || targetProvinces.length === 0)
+    ) {
       return res.status(400).json({
         message: "At least one province must be selected for provinces targetType",
       });
     }
 
-    if (targetType === "districts" && (!targetDistricts || targetDistricts.length === 0)) {
+    if (
+      targetType === "districts" &&
+      (!targetDistricts || targetDistricts.length === 0)
+    ) {
       return res.status(400).json({
         message: "At least one district must be selected for districts targetType",
       });
@@ -222,8 +290,14 @@ exports.getOfficerAlerts = async (req, res) => {
       .sort({ createdAt: -1 });
 
     const now = new Date();
-    const recentAlerts = alerts.filter(alert => !alert.expiresAt || alert.expiresAt > now);
-    const expiredAlerts = alerts.filter(alert => alert.expiresAt && alert.expiresAt <= now);
+
+    const recentAlerts = alerts.filter(
+      (alert) => !alert.expiresAt || alert.expiresAt > now
+    );
+
+    const expiredAlerts = alerts.filter(
+      (alert) => alert.expiresAt && alert.expiresAt <= now
+    );
 
     return res.status(200).json({
       message: "Alerts retrieved successfully",
@@ -263,7 +337,15 @@ exports.getPublicAlerts = async (req, res) => {
 exports.updateAlert = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, message, priority, targetType, targetProvinces, targetDistricts, expiresAt } = req.body;
+    const {
+      title,
+      message,
+      priority,
+      targetType,
+      targetProvinces,
+      targetDistricts,
+      expiresAt,
+    } = req.body;
 
     if (!title || !message || !priority || !targetType) {
       return res.status(400).json({
@@ -271,13 +353,19 @@ exports.updateAlert = async (req, res) => {
       });
     }
 
-    if (targetType === "provinces" && (!targetProvinces || targetProvinces.length === 0)) {
+    if (
+      targetType === "provinces" &&
+      (!targetProvinces || targetProvinces.length === 0)
+    ) {
       return res.status(400).json({
         message: "At least one province must be selected for provinces targetType",
       });
     }
 
-    if (targetType === "districts" && (!targetDistricts || targetDistricts.length === 0)) {
+    if (
+      targetType === "districts" &&
+      (!targetDistricts || targetDistricts.length === 0)
+    ) {
       return res.status(400).json({
         message: "At least one district must be selected for districts targetType",
       });
@@ -297,11 +385,7 @@ exports.updateAlert = async (req, res) => {
     alert.targetType = targetType;
     alert.targetProvinces = targetType === "all" ? [] : targetProvinces || [];
     alert.targetDistricts = targetType === "districts" ? targetDistricts : [];
-    if (expiresAt) {
-      alert.expiresAt = new Date(expiresAt);
-    } else {
-      alert.expiresAt = null;
-    }
+    alert.expiresAt = expiresAt ? new Date(expiresAt) : null;
 
     await alert.save();
 
