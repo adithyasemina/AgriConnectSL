@@ -4,3 +4,41 @@ server/node_modules/
 .env
 client/.next/
 .next/
+
+# Python virtual environment
+ml-service/venv/
+ml-service/.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Flask uploads
+ml-service/uploads/
+
+# ML model files
+ml-service/models/**/*.keras
+ml-service/models/**/*.h5
+ml-service/models/**/*.pkl
+ml-service/models/**/*.joblib
+
+# Environment files
+.env
+*.env
+
+# Node
+node_modules/
+.next/
+dist/
+build/
+
+# ML chatbot models
+ml-service/models/chatbot/
+
+# Optional ML files
+*.bin
+*.pt
+*.pth
+*.safetensors
