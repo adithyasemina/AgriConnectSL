@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import { getAuthUser } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { LuX, LuLoader } from "react-icons/lu";
 
 function AlertIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -43,6 +44,8 @@ export default function AlertsPage() {
   const [filter, setFilter] = useState<FilterType>("All");
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const user = getAuthUser();
 
   useEffect(() => {
@@ -56,9 +59,11 @@ export default function AlertsPage() {
   const fetchAlerts = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/api/officer/alerts");
-      setAlerts(res.data.alerts || []);
+      const res = await api.get("/api/farmer/alerts");
+      const activeAlerts = res.data.alerts?.active || [];
+      setAlerts(activeAlerts);
     } catch (error: any) {
+      console.error("Fetch farmer alerts error:", error);
       toast.error(error.response?.data?.message || "Failed to fetch alerts");
       setAlerts([]);
     } finally {
@@ -66,25 +71,7 @@ export default function AlertsPage() {
     }
   };
 
-  const isAlertVisibleToFarmer = (alert: Alert): boolean => {
-    if (!user) return false;
-
-    if (alert.targetType === "all") {
-      return true;
-    }
-
-    if (alert.targetType === "provinces") {
-      return alert.targetProvinces.includes(user.province || "");
-    }
-
-    if (alert.targetType === "districts") {
-      return alert.targetDistricts.includes(user.district || "");
-    }
-
-    return false;
-  };
-
-  const visibleAlerts = alerts.filter(isAlertVisibleToFarmer);
+  const visibleAlerts = alerts;
 
   const filteredAlerts = visibleAlerts.filter((alert) => {
     if (filter === "All") return true;
@@ -118,18 +105,55 @@ export default function AlertsPage() {
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+      return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } catch {
       return dateString;
     }
   };
 
+  const getRemainingTime = (expiresAt: string | null | undefined): string => {
+    if (!expiresAt) return "No expiry";
+
+    try {
+      const now = new Date();
+      const expiryDate = new Date(expiresAt);
+      const diffMs = expiryDate.getTime() - now.getTime();
+
+      if (diffMs <= 0) {
+        return "Expired";
+      }
+
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffHours / 24);
+      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+      if (diffDays > 0) {
+        return `${diffDays}d ${diffHours % 24}h left`;
+      } else if (diffHours > 0) {
+        return `${diffHours}h ${diffMins}m left`;
+      } else {
+        return `${diffMins}m left`;
+      }
+    } catch {
+      return "Unknown";
+    }
+  };
+
+  const openAlertModal = (alert: Alert) => {
+    setSelectedAlert(alert);
+    setModalOpen(true);
+  };
+
+  const closeAlertModal = () => {
+    setModalOpen(false);
+    setSelectedAlert(null);
+  };
+
   if (!mounted || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="rounded-2xl border border-green-100 bg-white px-6 py-4 shadow-sm">
-          Loading alerts...
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
+        <LuLoader className="h-10 w-10 animate-spin text-blue-600" />
+        <p className="text-sm font-medium text-slate-500">Loading alerts...</p>
       </div>
     );
   }
@@ -186,7 +210,8 @@ export default function AlertsPage() {
           filteredAlerts.map((alert) => (
             <div
               key={alert._id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition"
+              onClick={() => openAlertModal(alert)}
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-lg hover:border-blue-300 transition cursor-pointer"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex gap-4 flex-1">
@@ -228,7 +253,7 @@ export default function AlertsPage() {
               </div>
 
               <div className="mt-4 border-t border-slate-100 pt-3">
-                <p className="text-xs text-slate-500 line-clamp-3">{alert.message}</p>
+                <p className="text-xs text-slate-500 line-clamp-2">{alert.message}</p>
               </div>
             </div>
           ))
@@ -255,6 +280,84 @@ export default function AlertsPage() {
           <li>✓ Low alerts are informational updates about prices and schedules</li>
         </ul>
       </div>
+
+      {/* Alert Details Modal */}
+      {modalOpen && selectedAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+          <div className="max-h-[90vh] w-full max-w-2xl rounded-[2rem] bg-white shadow-lg overflow-hidden flex flex-col my-8">
+            {/* Modal Header */}
+            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-6 z-10 flex-shrink-0">
+              <h2 className="text-lg font-black text-slate-900">Alert Details</h2>
+              <button
+                onClick={closeAlertModal}
+                className="rounded-lg text-slate-500 hover:bg-slate-100"
+              >
+                <LuX className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="space-y-6 p-6 overflow-y-auto flex-1">
+              <div>
+                <label className="text-xs font-black uppercase tracking-wider text-slate-500">Alert Title</label>
+                <p className="mt-2 text-sm font-bold text-slate-900">{selectedAlert.title}</p>
+              </div>
+
+              <div>
+                <label className="text-xs font-black uppercase tracking-wider text-slate-500">Full Message</label>
+                <p className="mt-2 text-sm text-slate-700 whitespace-pre-wrap">{selectedAlert.message}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">Priority</label>
+                  <p className="mt-2">
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${getPriorityColor(selectedAlert.priority)}`}>
+                      {selectedAlert.priority}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">Sent By</label>
+                  <p className="mt-2 text-sm font-bold text-slate-900">{getCreatedByName(selectedAlert)}</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-black uppercase tracking-wider text-slate-500">Target Area</label>
+                <p className="mt-2 text-sm font-bold text-slate-900">
+                  {selectedAlert.targetType === "all" && "Island-wide (All Provinces & Districts)"}
+                  {selectedAlert.targetType === "provinces" && `Provinces: ${selectedAlert.targetProvinces.join(", ")}`}
+                  {selectedAlert.targetType === "districts" && `Districts: ${selectedAlert.targetDistricts.join(", ")}`}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">Sent Date</label>
+                  <p className="mt-2 text-sm text-slate-700">{formatDate(selectedAlert.createdAt)}</p>
+                </div>
+                {selectedAlert.expiresAt && (
+                  <div>
+                    <label className="text-xs font-black uppercase tracking-wider text-slate-500">Expires</label>
+                    <p className="mt-2 text-sm text-slate-700">{formatDate(selectedAlert.expiresAt)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex-shrink-0">
+              <button
+                onClick={closeAlertModal}
+                className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

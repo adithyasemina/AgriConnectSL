@@ -45,3 +45,11 @@ exports.officerOnly = (req, res, next) => {
     return res.status(403).json({ message: "Access denied. Officer only." });
   }
 };
+
+exports.farmerOnly = (req, res, next) => {
+  if (req.user && req.user.role === "farmer") {
+    next();
+  } else {
+    return res.status(403).json({ message: "Access denied. Farmer only." });
+  }
+};

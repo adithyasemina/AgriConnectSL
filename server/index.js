@@ -10,6 +10,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const officerRoutes = require("./routes/officerRoutes");
+const farmerRoutes = require("./routes/farmerRoutes");
 const soilTestRoutes = require("./routes/soilTestRoutes");
 const chatbotRoute = require("./routes/chatbotRoute");
 const messageRoutes = require("./routes/messageRoutes");
@@ -29,6 +30,7 @@ app.use("/api/articles", articleRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/officer", officerRoutes);
+app.use("/api/farmer", farmerRoutes);
 app.use("/api/soil-tests", soilTestRoutes);
 app.use("/api/leaf", leafRoutes);
 
