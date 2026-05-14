@@ -12,6 +12,7 @@ import {
   LuX,
   LuChevronLeft,
   LuChevronRight,
+  LuLoader,
 } from "react-icons/lu";
 
 type Farmer = {
@@ -189,18 +190,18 @@ export default function FarmersPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-slate-500">Loading farmers...</div>
+      <div className="flex flex-col items-center justify-center min-h-[400px] w-full space-y-4">
+        <LuLoader className="h-10 w-10 animate-spin text-blue-600" />
+        <p className="text-sm font-medium text-slate-500">Loading farmers data...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-2">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-0">
       {/* Unblocked Farmers Section */}
       <div className="flex h-[560px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="shrink-0 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          {/* Left Section: Title and Count */}
           <div className="flex items-center ml-4 gap-3 min-w-fit">
             <div className="flex flex-col">
               <h2 className="text-lg font-black text-slate-900">
@@ -213,7 +214,6 @@ export default function FarmersPage() {
             </div>
           </div>
 
-          {/* Right Section: Filters and Search */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 sm:justify-end">
             <div className="relative inline-block">
               <select
@@ -236,7 +236,6 @@ export default function FarmersPage() {
                   </option>
                 ))}
               </select>
-              {/* Province ඊතලය */}
               <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -259,7 +258,6 @@ export default function FarmersPage() {
                   </option>
                 ))}
               </select>
-              {/* District ඊතලය */}
               <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -283,7 +281,6 @@ export default function FarmersPage() {
           </div>
         </div>
 
-        {/* Desktop Table */}
         <div className="hidden md:flex flex-col flex-1 overflow-hidden">
           <div className="overflow-x-auto overflow-y-auto">
             <table className="w-full table-fixed">
@@ -360,13 +357,9 @@ export default function FarmersPage() {
           </div>
         </div>
 
-        {/* Mobile Cards */}
         <div className="space-y-4 md:hidden">
           {paginatedUnblocked.map((farmer) => (
-            <div
-              key={farmer._id}
-              className="rounded-2xl border border-slate-200 p-4"
-            >
+            <div key={farmer._id} className="rounded-2xl border border-slate-200 p-4">
               <div className="mb-3 flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-slate-900 truncate">
@@ -375,37 +368,25 @@ export default function FarmersPage() {
                   <p className="text-xs text-slate-500 truncate">{farmer.email}</p>
                 </div>
               </div>
-
               <div className="mb-4 grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <p className="text-slate-500">Province</p>
-                  <p className="font-bold text-slate-900">
-                    {farmer.province || "-"}
-                  </p>
+                  <p className="font-bold text-slate-900">{farmer.province || "-"}</p>
                 </div>
                 <div>
                   <p className="text-slate-500">District</p>
-                  <p className="font-bold text-slate-900">
-                    {farmer.district || "-"}
-                  </p>
+                  <p className="font-bold text-slate-900">{farmer.district || "-"}</p>
                 </div>
               </div>
-
               <div className="mb-4 border-t border-slate-100 pt-3">
                 <p className="text-xs text-slate-500">Registered</p>
                 <p className="font-bold text-slate-900">
-                  {farmer.createdAt
-                    ? new Date(farmer.createdAt).toLocaleDateString()
-                    : "-"}
+                  {farmer.createdAt ? new Date(farmer.createdAt).toLocaleDateString() : "-"}
                 </p>
               </div>
-
               <div className="flex gap-2">
                 <button
-                  onClick={() => {
-                    setSelectedFarmer(farmer);
-                    setProfileModalOpen(true);
-                  }}
+                  onClick={() => { setSelectedFarmer(farmer); setProfileModalOpen(true); }}
                   className="flex-1 rounded-lg border border-slate-200 bg-white py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
                 >
                   Profile
@@ -422,18 +403,15 @@ export default function FarmersPage() {
         </div>
 
         {paginatedUnblocked.length === 0 && (
-          <div className="flex-1 flex items-center justify-center lg:-mt-100 -mt-0 text-slate-500">
+          <div className="flex-1 flex items-center justify-center text-slate-500">
             <p className="text-sm">No active farmers found</p>
           </div>
         )}
 
-        {/* Pagination */}
         {unblockedPages > 0 && (
           <div className="shrink-0 flex items-center justify-center gap-2 pt-6">
             <button
-              onClick={() =>
-                setUnblockedPage((p) => Math.max(0, p - 1))
-              }
+              onClick={() => setUnblockedPage((p) => Math.max(0, p - 1))}
               disabled={unblockedPage === 0}
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
             >
@@ -443,11 +421,7 @@ export default function FarmersPage() {
               Pages {unblockedPage + 1} of {unblockedPages || 1}
             </span>
             <button
-              onClick={() =>
-                setUnblockedPage((p) =>
-                  Math.min(Math.max(0, unblockedPages - 1), p + 1)
-                )
-              }
+              onClick={() => setUnblockedPage((p) => Math.min(Math.max(0, unblockedPages - 1), p + 1))}
               disabled={unblockedPage >= unblockedPages - 1 || unblockedPages === 0}
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
             >
@@ -458,15 +432,11 @@ export default function FarmersPage() {
       </div>
 
       {/* Blocked Farmers Section */}
-      <div className="flex h-[560px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">        <div className="shrink-0 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          {/* Left Section: Title and Count */}
+      <div className="flex h-[560px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <div className="shrink-0 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3 ml-4 min-w-fit">
             <div className="flex flex-col">
-              <div className="flex items-center gap-2 ">
-                <h2 className="text-lg font-black text-slate-900">
-                  BLOCKED FARMERS
-                </h2>
-              </div>
+              <h2 className="text-lg font-black text-slate-900">BLOCKED FARMERS</h2>
               <p className="text-sm font-medium text-slate-500 flex items-center gap-1">
                 {filteredBlocked.length} FARMERS
                 <span className="h-3 w-3 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
@@ -474,7 +444,6 @@ export default function FarmersPage() {
             </div>
           </div>
 
-          {/* Right Section: Filters and Search */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 sm:justify-end">
             <div className="relative inline-block">
               <select
@@ -492,12 +461,9 @@ export default function FarmersPage() {
               >
                 <option value="">All Provinces</option>
                 {provinces.map((province) => (
-                  <option key={province} value={province}>
-                    {province}
-                  </option>
+                  <option key={province} value={province}>{province}</option>
                 ))}
               </select>
-              {/* මෙතැනින් ඔබේ අයිකනය (React Icons වලින්) ඇතුළත් කරන්න */}
               <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -506,23 +472,16 @@ export default function FarmersPage() {
             </div>
 
             <div className="relative inline-block">
-            <select
-              value={blockedDistrictFilter}
-              onChange={(e) => {
-                setBlockedDistrictFilter(e.target.value);
-                setBlockedPage(0);
-              }}
-              className="appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-10 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-            >
-              <option value="">All Districts</option>
-              {getAvailableDistricts(blockedProvinceFilter).map((district) => (
-                <option key={district} value={district}>
-                  {district}
-                </option>
-              ))}
-            </select>
-  
-              {/* Dropdown ඊතලය */}
+              <select
+                value={blockedDistrictFilter}
+                onChange={(e) => { setBlockedDistrictFilter(e.target.value); setBlockedPage(0); }}
+                className="appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-10 py-2.5 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">All Districts</option>
+                {getAvailableDistricts(blockedProvinceFilter).map((district) => (
+                  <option key={district} value={district}>{district}</option>
+                ))}
+              </select>
               <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -536,94 +495,41 @@ export default function FarmersPage() {
                 type="text"
                 placeholder="Search blocked farmers..."
                 value={blockedSearch}
-                onChange={(e) => {
-                  setBlockedSearch(e.target.value);
-                  setBlockedPage(0);
-                }}
+                onChange={(e) => { setBlockedSearch(e.target.value); setBlockedPage(0); }}
                 className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
             </div>
           </div>
         </div>
 
-        {/* Desktop Table */}
         <div className="hidden md:flex flex-col flex-1 overflow-hidden">
           <div className="overflow-x-auto overflow-y-auto">
             <table className="w-full table-fixed">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Farmer Name
-                  </th>
-                  <th className="w-[22%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Email
-                  </th>
-                  <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Province
-                  </th>
-                  <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    District
-                  </th>
-                  <th className="w-[16%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">
-                    Blocked Date
-                  </th>
-                  <th className="w-[16%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">
-                    Action
-                  </th>
+                  <th className="w-[18%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">Farmer Name</th>
+                  <th className="w-[22%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">Email</th>
+                  <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">Province</th>
+                  <th className="w-[14%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">District</th>
+                  <th className="w-[16%] py-4 px-4 text-left text-xs font-black uppercase tracking-wider text-slate-500">Blocked Date</th>
+                  <th className="w-[16%] py-4 px-4 text-center text-xs font-black uppercase tracking-wider text-slate-500">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedBlocked.map((farmer) => (
-                  <tr
-                    key={farmer._id}
-                    className="border-b border-slate-100 hover:bg-slate-50 h-16"
-                  >
-                    <td className="w-[18%] py-4 px-4 text-sm font-bold text-slate-900 truncate">
-                      {farmer.firstName} {farmer.lastName}
-                    </td>
-                    <td className="w-[28%] py-4 px-4 text-sm text-slate-600 truncate">
-                      {farmer.email}
-                    </td>
-                    <td className="w-[14%] py-4 px-4 text-sm text-slate-600 truncate">
-                      {farmer.province || "-"}
-                    </td>
-                    <td className="w-[14%] py-4 px-4 text-sm text-slate-600 truncate">
-                      {farmer.district || "-"}
-                    </td>
+                  <tr key={farmer._id} className="border-b border-slate-100 hover:bg-slate-50 h-16">
+                    <td className="w-[18%] py-4 px-4 text-sm font-bold text-slate-900 truncate">{farmer.firstName} {farmer.lastName}</td>
+                    <td className="w-[28%] py-4 px-4 text-sm text-slate-600 truncate">{farmer.email}</td>
+                    <td className="w-[14%] py-4 px-4 text-sm text-slate-600 truncate">{farmer.province || "-"}</td>
+                    <td className="w-[14%] py-4 px-4 text-sm text-slate-600 truncate">{farmer.district || "-"}</td>
                     <td className="w-[16%] py-4 px-4 text-sm text-slate-600 truncate">
-                      {farmer.blockedAt
-                        ? new Date(farmer.blockedAt).toLocaleDateString()
-                        : "-"}
+                      {farmer.blockedAt ? new Date(farmer.blockedAt).toLocaleDateString() : "-"}
                     </td>
                     <td className="w-[10%] py-4 px-4">
                       <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedFarmer(farmer);
-                            setProfileModalOpen(true);
-                          }}
-                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50"
-                          title="View Profile"
-                        >
-                          <LuEye className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setReasonModalFarmer(farmer);
-                            setReasonModalOpen(true);
-                          }}
-                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50"
-                          title="View Block Reason"
-                        >
-                          <LuInfo className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleUnblockClick(farmer)}
-                          className="rounded-lg bg-blue-50 px-3 py-2 text-blue-600 hover:bg-blue-100"
-                          title="Unblock Farmer"
-                        >
-                          <LuZap className="h-4 w-4" />
-                        </button>
+                        <button onClick={() => { setSelectedFarmer(farmer); setProfileModalOpen(true); }} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50" title="View Profile"><LuEye className="h-4 w-4" /></button>
+                        <button onClick={() => { setReasonModalFarmer(farmer); setReasonModalOpen(true); }} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 hover:bg-slate-50" title="View Block Reason"><LuInfo className="h-4 w-4" /></button>
+                        <button onClick={() => handleUnblockClick(farmer)} className="rounded-lg bg-blue-50 px-3 py-2 text-blue-600 hover:bg-blue-100" title="Unblock Farmer"><LuZap className="h-4 w-4" /></button>
                       </div>
                     </td>
                   </tr>
@@ -633,377 +539,133 @@ export default function FarmersPage() {
           </div>
         </div>
 
-        {/* Mobile Cards */}
         <div className="space-y-4 md:hidden">
           {paginatedBlocked.map((farmer) => (
-            <div
-              key={farmer._id}
-              className="rounded-2xl border border-slate-200 p-4"
-            >
+            <div key={farmer._id} className="rounded-2xl border border-slate-200 p-4">
               <div className="mb-3 flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-900 truncate">
-                    {farmer.firstName} {farmer.lastName}
-                  </p>
+                  <p className="font-bold text-slate-900 truncate">{farmer.firstName} {farmer.lastName}</p>
                   <p className="text-xs text-slate-500 truncate">{farmer.email}</p>
                 </div>
               </div>
-
               <div className="mb-4 grid grid-cols-2 gap-2 text-xs">
-                <div className="min-w-0">
-                  <p className="text-slate-500">Province</p>
-                  <p className="font-bold text-slate-900 truncate">
-                    {farmer.province || "-"}
-                  </p>
-                </div>
-                <div className="min-w-0">
-                  <p className="text-slate-500">District</p>
-                  <p className="font-bold text-slate-900 truncate">
-                    {farmer.district || "-"}
-                  </p>
-                </div>
+                <div className="min-w-0"><p className="text-slate-500">Province</p><p className="font-bold text-slate-900 truncate">{farmer.province || "-"}</p></div>
+                <div className="min-w-0"><p className="text-slate-500">District</p><p className="font-bold text-slate-900 truncate">{farmer.district || "-"}</p></div>
               </div>
-
               <div className="mb-4 border-t border-slate-100 pt-3">
                 <p className="text-xs text-slate-500">Blocked Date</p>
-                <p className="font-bold text-slate-900">
-                  {farmer.blockedAt
-                    ? new Date(farmer.blockedAt).toLocaleDateString()
-                    : "-"}
-                </p>
+                <p className="font-bold text-slate-900">{farmer.blockedAt ? new Date(farmer.blockedAt).toLocaleDateString() : "-"}</p>
               </div>
-
               <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setSelectedFarmer(farmer);
-                    setProfileModalOpen(true);
-                  }}
-                  className="flex-1 rounded-lg border border-slate-200 bg-white py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
-                >
-                  Profile
-                </button>
-                <button
-                  onClick={() => {
-                    setReasonModalFarmer(farmer);
-                    setReasonModalOpen(true);
-                  }}
-                  className="flex-1 rounded-lg border border-slate-200 bg-white py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
-                >
-                  Reason
-                </button>
-                <button
-                  onClick={() => handleUnblockClick(farmer)}
-                  className="flex-1 rounded-lg bg-blue-600 py-2 text-xs font-bold text-white hover:bg-blue-700"
-                >
-                  Unblock
-                </button>
+                <button onClick={() => { setSelectedFarmer(farmer); setProfileModalOpen(true); }} className="flex-1 rounded-lg border border-slate-200 bg-white py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">Profile</button>
+                <button onClick={() => { setReasonModalFarmer(farmer); setReasonModalOpen(true); }} className="flex-1 rounded-lg border border-slate-200 bg-white py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">Reason</button>
+                <button onClick={() => handleUnblockClick(farmer)} className="flex-1 rounded-lg bg-blue-600 py-2 text-xs font-bold text-white hover:bg-blue-700">Unblock</button>
               </div>
             </div>
           ))}
         </div>
 
         {paginatedBlocked.length === 0 && (
-          <div className="flex-1 lg:-mt-100 -mt-0 flex items-center justify-center text-slate-500">
+          <div className="flex-1 flex items-center justify-center text-slate-500">
             <p className="text-sm">No blocked farmers found</p>
           </div>
         )}
 
-        {/* Pagination */}
         {blockedPages > 0 && (
           <div className="shrink-0 flex items-center justify-center gap-2 pt-6">
-            <button
-              onClick={() => setBlockedPage((p) => Math.max(0, p - 1))}
-              disabled={blockedPage === 0}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-            >
-              <LuChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="text-xs font-bold text-slate-600">
-              Page {blockedPage + 1} of {blockedPages || 1}
-            </span>
-            <button
-              onClick={() =>
-                setBlockedPage((p) =>
-                  Math.min(Math.max(0, blockedPages - 1), p + 1)
-                )
-              }
-              disabled={blockedPage >= blockedPages - 1 || blockedPages === 0}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-            >
-              <LuChevronRight className="h-4 w-4" />
-            </button>
+            <button onClick={() => setBlockedPage((p) => Math.max(0, p - 1))} disabled={blockedPage === 0} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"><LuChevronLeft className="h-4 w-4" /></button>
+            <span className="text-xs font-bold text-slate-600">Page {blockedPage + 1} of {blockedPages || 1}</span>
+            <button onClick={() => setBlockedPage((p) => Math.min(Math.max(0, blockedPages - 1), p + 1))} disabled={blockedPage >= blockedPages - 1 || blockedPages === 0} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"><LuChevronRight className="h-4 w-4" /></button>
           </div>
         )}
       </div>
 
       {/* Modals */}
-      {profileModalOpen && selectedFarmer && (
-        <ProfileModal
-          farmer={selectedFarmer}
-          onClose={() => setProfileModalOpen(false)}
-        />
-      )}
-
-      {blockModalOpen && blockingFarmer && (
-        <BlockFarmerModal
-          farmer={blockingFarmer}
-          reason={blockReason}
-          onReasonChange={setBlockReason}
-          onSubmit={handleBlockSubmit}
-          onClose={() => setBlockModalOpen(false)}
-        />
-      )}
-
-      {reasonModalOpen && reasonModalFarmer && (
-        <BlockedReasonModal
-          farmer={reasonModalFarmer}
-          onClose={() => setReasonModalOpen(false)}
-        />
-      )}
-
-      {unblockConfirmOpen && unblockingFarmer && (
-        <UnblockConfirmModal
-          farmer={unblockingFarmer}
-          onConfirm={handleUnblockConfirm}
-          onCancel={() => setUnblockConfirmOpen(false)}
-        />
-      )}
+      {profileModalOpen && selectedFarmer && <ProfileModal farmer={selectedFarmer} onClose={() => setProfileModalOpen(false)} />}
+      {blockModalOpen && blockingFarmer && <BlockFarmerModal farmer={blockingFarmer} reason={blockReason} onReasonChange={setBlockReason} onSubmit={handleBlockSubmit} onClose={() => setBlockModalOpen(false)} />}
+      {reasonModalOpen && reasonModalFarmer && <BlockedReasonModal farmer={reasonModalFarmer} onClose={() => setReasonModalOpen(false)} />}
+      {unblockConfirmOpen && unblockingFarmer && <UnblockConfirmModal farmer={unblockingFarmer} onConfirm={handleUnblockConfirm} onCancel={() => setUnblockConfirmOpen(false)} />}
     </div>
   );
 }
 
-function ProfileModal({
-  farmer,
-  onClose,
-}: {
-  farmer: Farmer;
-  onClose: () => void;
-}) {
+// Sub components (Modals) ekama file eke thiyanna
+function ProfileModal({ farmer, onClose }: { farmer: Farmer; onClose: () => void; }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-black text-slate-900">Farmer Profile</h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg hover:bg-slate-100 p-1"
-          >
-            <LuX className="h-5 w-5" />
-          </button>
+          <button onClick={onClose} className="rounded-lg hover:bg-slate-100 p-1"><LuX className="h-5 w-5" /></button>
         </div>
-
         <div className="space-y-4">
-          <div>
-            <p className="text-xs text-slate-500">First Name</p>
-            <p className="font-bold text-slate-900">{farmer.firstName}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Last Name</p>
-            <p className="font-bold text-slate-900">{farmer.lastName}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Email</p>
-            <p className="font-bold text-slate-900">{farmer.email}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Province</p>
-            <p className="font-bold text-slate-900">{farmer.province || "-"}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">District</p>
-            <p className="font-bold text-slate-900">{farmer.district || "-"}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Role</p>
-            <p className="font-bold text-slate-900">{farmer.role}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Status</p>
-            <p className="font-bold text-slate-900">
-              {farmer.isActive ? "Active" : "Inactive"}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Registered Date</p>
-            <p className="font-bold text-slate-900">
-              {farmer.createdAt
-                ? new Date(farmer.createdAt).toLocaleDateString()
-                : "-"}
-            </p>
-          </div>
+          <div><p className="text-xs text-slate-500">First Name</p><p className="font-bold text-slate-900">{farmer.firstName}</p></div>
+          <div><p className="text-xs text-slate-500">Last Name</p><p className="font-bold text-slate-900">{farmer.lastName}</p></div>
+          <div><p className="text-xs text-slate-500">Email</p><p className="font-bold text-slate-900">{farmer.email}</p></div>
+          <div><p className="text-xs text-slate-500">Province</p><p className="font-bold text-slate-900">{farmer.province || "-"}</p></div>
+          <div><p className="text-xs text-slate-500">District</p><p className="font-bold text-slate-900">{farmer.district || "-"}</p></div>
+          <div><p className="text-xs text-slate-500">Status</p><p className="font-bold text-slate-900">{farmer.isActive ? "Active" : "Inactive"}</p></div>
+          <div><p className="text-xs text-slate-500">Registered Date</p><p className="font-bold text-slate-900">{farmer.createdAt ? new Date(farmer.createdAt).toLocaleDateString() : "-"}</p></div>
         </div>
-
-        <button
-          onClick={onClose}
-          className="mt-6 w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700"
-        >
-          Close
-        </button>
+        <button onClick={onClose} className="mt-6 w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700">Close</button>
       </div>
     </div>
   );
 }
 
-function BlockFarmerModal({
-  farmer,
-  reason,
-  onReasonChange,
-  onSubmit,
-  onClose,
-}: {
-  farmer: Farmer;
-  reason: string;
-  onReasonChange: (reason: string) => void;
-  onSubmit: () => void;
-  onClose: () => void;
-}) {
+function BlockFarmerModal({ farmer, reason, onReasonChange, onSubmit, onClose }: { farmer: Farmer; reason: string; onReasonChange: (reason: string) => void; onSubmit: () => void; onClose: () => void; }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-black text-slate-900">Block Farmer</h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg hover:bg-slate-100 p-1"
-          >
-            <LuX className="h-5 w-5" />
-          </button>
+          <button onClick={onClose} className="rounded-lg hover:bg-slate-100 p-1"><LuX className="h-5 w-5" /></button>
         </div>
-
-        <p className="mb-4 text-sm text-slate-600">
-          You are about to block{" "}
-          <span className="font-bold">
-            {farmer.firstName} {farmer.lastName}
-          </span>
-          . Please provide a reason:
-        </p>
-
-        <textarea
-          value={reason}
-          onChange={(e) => onReasonChange(e.target.value)}
-          placeholder="Enter block reason..."
-          rows={4}
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
-        />
-
+        <p className="mb-4 text-sm text-slate-600">You are about to block <span className="font-bold">{farmer.firstName} {farmer.lastName}</span>. Please provide a reason:</p>
+        <textarea value={reason} onChange={(e) => onReasonChange(e.target.value)} placeholder="Enter block reason..." rows={4} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none" />
         <div className="mt-6 flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-600 hover:bg-slate-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onSubmit}
-            disabled={!reason.trim()}
-            className="flex-1 rounded-2xl bg-red-600 px-4 py-3 text-sm font-black text-white hover:bg-red-700 disabled:opacity-50"
-          >
-            Block Farmer
-          </button>
+          <button onClick={onClose} className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-600 hover:bg-slate-50">Cancel</button>
+          <button onClick={onSubmit} disabled={!reason.trim()} className="flex-1 rounded-2xl bg-red-600 px-4 py-3 text-sm font-black text-white hover:bg-red-700 disabled:opacity-50">Block Farmer</button>
         </div>
       </div>
     </div>
   );
 }
 
-function BlockedReasonModal({
-  farmer,
-  onClose,
-}: {
-  farmer: Farmer;
-  onClose: () => void;
-}) {
+function BlockedReasonModal({ farmer, onClose }: { farmer: Farmer; onClose: () => void; }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-black text-slate-900">Block Reason</h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg hover:bg-slate-100 p-1"
-          >
-            <LuX className="h-5 w-5" />
-          </button>
+          <button onClick={onClose} className="rounded-lg hover:bg-slate-100 p-1"><LuX className="h-5 w-5" /></button>
         </div>
-
         <div className="space-y-4">
-          <div>
-            <p className="text-xs text-slate-500">Farmer Name</p>
-            <p className="font-bold text-slate-900">
-              {farmer.firstName} {farmer.lastName}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Blocked Date</p>
-            <p className="font-bold text-slate-900">
-              {farmer.blockedAt
-                ? new Date(farmer.blockedAt).toLocaleDateString()
-                : "-"}
-            </p>
-          </div>
+          <div><p className="text-xs text-slate-500">Farmer Name</p><p className="font-bold text-slate-900">{farmer.firstName} {farmer.lastName}</p></div>
+          <div><p className="text-xs text-slate-500">Blocked Date</p><p className="font-bold text-slate-900">{farmer.blockedAt ? new Date(farmer.blockedAt).toLocaleDateString() : "-"}</p></div>
           <div className="rounded-lg bg-red-50 p-4">
-            <p className="text-xs text-red-600 font-bold uppercase mb-2">
-              Block Reason
-            </p>
+            <p className="text-xs text-red-600 font-bold uppercase mb-2">Block Reason</p>
             <p className="text-sm text-red-900">{farmer.blockedReason}</p>
           </div>
         </div>
-
-        <button
-          onClick={onClose}
-          className="mt-6 w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700"
-        >
-          Close
-        </button>
+        <button onClick={onClose} className="mt-6 w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700">Close</button>
       </div>
     </div>
   );
 }
 
-function UnblockConfirmModal({
-  farmer,
-  onConfirm,
-  onCancel,
-}: {
-  farmer: Farmer;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
+function UnblockConfirmModal({ farmer, onConfirm, onCancel }: { farmer: Farmer; onConfirm: () => void; onCancel: () => void; }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-black text-slate-900">Confirm Unblock</h2>
-          <button
-            onClick={onCancel}
-            className="rounded-lg hover:bg-slate-100 p-1"
-          >
-            <LuX className="h-5 w-5" />
-          </button>
+          <button onClick={onCancel} className="rounded-lg hover:bg-slate-100 p-1"><LuX className="h-5 w-5" /></button>
         </div>
-
-        <p className="mb-4 text-sm text-slate-600">
-          Are you sure you want to unblock{" "}
-          <span className="font-bold">
-            {farmer.firstName} {farmer.lastName}
-          </span>
-          ?
-        </p>
-
+        <p className="mb-4 text-sm text-slate-600">Are you sure you want to unblock <span className="font-bold">{farmer.firstName} {farmer.lastName}</span>?</p>
         <div className="mt-6 flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-600 hover:bg-slate-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="flex-1 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700"
-          >
-            Unblock Farmer
-          </button>
+          <button onClick={onCancel} className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-600 hover:bg-slate-50">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700">Unblock Farmer</button>
         </div>
       </div>
     </div>

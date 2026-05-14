@@ -787,7 +787,7 @@ export default function SoilTestPage() {
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-2">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-0">
       {/* Pending Soil Tests */}
       <SoilTestTable
         title="PENDING SOIL TESTS"

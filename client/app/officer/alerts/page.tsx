@@ -11,6 +11,7 @@ import {
   LuChevronRight,
   LuTrash2,
   LuPencil,
+  LuLoader,
 } from "react-icons/lu";
 
 type Alert = {
@@ -75,6 +76,9 @@ export default function AlertsPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [sending, setSending] = useState(false);
   const [remainingTimes, setRemainingTimes] = useState<Record<string, string>>({});
+
+  // Check if any modal is open to hide the FAB
+  const isAnyModalOpen = createModalOpen || viewModalOpen || deleteConfirmOpen || sendConfirmOpen;
 
   useEffect(() => {
     fetchAlerts();
@@ -188,14 +192,12 @@ export default function AlertsPage() {
 
       if (editingAlertId) {
         // Update existing alert using PUT
-        const response = await api.put(`/api/officer/alerts/${editingAlertId}`, alertPayload);
-        console.log("Alert updated:", response.data);
+        await api.put(`/api/officer/alerts/${editingAlertId}`, alertPayload);
         toast.success("Alert updated successfully");
         setEditingAlertId(null);
       } else {
         // Create new alert using POST
-        const response = await api.post("/api/officer/alerts", alertPayload);
-        console.log("Alert created:", response.data);
+        await api.post("/api/officer/alerts", alertPayload);
         toast.success("Alert created successfully");
       }
 
@@ -345,12 +347,20 @@ export default function AlertsPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] w-full space-y-4">
+        <LuLoader className="h-10 w-10 animate-spin text-blue-600" />
+        <p className="text-sm font-medium text-slate-500">Loading alerts data...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-2 pb-20">
+    <div className="space-y-6 p-4 sm:p-6 lg:p-0 pb-28">
       {/* Recent Alerts Section */}
-      <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="flex h-[560px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="shrink-0 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          {/* Title and Count */}
           <div className="flex items-center ml-4 gap-3 min-w-fit">
             <div className="flex flex-col">
               <h2 className="text-lg font-black text-slate-900">RECENT ALERTS</h2>
@@ -361,7 +371,6 @@ export default function AlertsPage() {
             </div>
           </div>
 
-          {/* Priority Filter */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 sm:justify-end">
             <div className="relative inline-block">
               <select
@@ -387,7 +396,7 @@ export default function AlertsPage() {
         </div>
 
         {/* Desktop Table */}
-        <div className="hidden md:flex flex-col overflow-hidden">
+        <div className="hidden md:flex flex-col flex-1 overflow-hidden">
           <div className="overflow-x-auto overflow-y-auto">
             <table className="w-full table-fixed">
               <thead>
@@ -457,116 +466,87 @@ export default function AlertsPage() {
               </tbody>
             </table>
           </div>
-
-          {paginatedRecentAlerts.length === 0 && (
-            <div className="flex items-center justify-center py-8 text-slate-500">
-              <p className="text-sm">No active alerts found</p>
-            </div>
-          )}
-
-          {/* Pagination for Recent Alerts */}
-          {totalRecentPages > 1 && (
-            <div className="shrink-0 flex items-center justify-center gap-2 pt-6 border-t border-slate-200">
-              <button
-                onClick={() => setCurrentPageRecent(Math.max(0, currentPageRecent - 1))}
-                disabled={currentPageRecent === 0}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-              >
-                <LuChevronLeft className="h-4 w-4" />
-              </button>
-              <span className="text-xs font-bold text-slate-600">
-                Page {currentPageRecent + 1} of {totalRecentPages}
-              </span>
-              <button
-                onClick={() => setCurrentPageRecent(Math.min(totalRecentPages - 1, currentPageRecent + 1))}
-                disabled={currentPageRecent >= totalRecentPages - 1}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-              >
-                <LuChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Mobile Cards */}
         <div className="space-y-4 md:hidden">
-          {paginatedRecentAlerts.length > 0 ? (
-            paginatedRecentAlerts.map((alert) => (
-              <div key={alert._id} className="rounded-2xl border border-slate-200 p-4">
-                <div className="mb-3 flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 truncate">{alert.title}</p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {remainingTimes[alert._id] || "Loading..."}
-                    </p>
-                  </div>
-                  <span
-                    className={`inline-block rounded-full px-2 py-1 text-xs font-bold whitespace-nowrap ${getPriorityColor(
-                      alert.priority
-                    )}`}
-                  >
-                    {alert.priority}
-                  </span>
+          {paginatedRecentAlerts.map((alert) => (
+            <div key={alert._id} className="rounded-2xl border border-slate-200 p-4">
+              <div className="mb-3 flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-slate-900 truncate">{alert.title}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {remainingTimes[alert._id] || "Loading..."}
+                  </p>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setSelectedAlert(alert);
-                      setViewModalOpen(true);
-                    }}
-                    className="flex-1 rounded-lg border border-slate-200 bg-white py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
-                  >
-                    View
-                  </button>
-                  <button
-                    onClick={() => handleEditAlert(alert)}
-                    className="flex-1 rounded-lg border border-blue-200 bg-blue-50 py-2 text-xs font-bold text-blue-600 hover:bg-blue-100"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(alert)}
-                    className="flex-1 rounded-lg border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
-                  >
-                    Delete
-                  </button>
-                </div>
+                <span
+                  className={`inline-block rounded-full px-2 py-1 text-xs font-bold whitespace-nowrap ${getPriorityColor(
+                    alert.priority
+                  )}`}
+                >
+                  {alert.priority}
+                </span>
               </div>
-            ))
-          ) : (
-            <div className="py-8 text-center text-slate-500">
-              No active alerts found
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedAlert(alert);
+                    setViewModalOpen(true);
+                  }}
+                  className="flex-1 rounded-lg border border-slate-200 bg-white py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  View
+                </button>
+                <button
+                  onClick={() => handleEditAlert(alert)}
+                  className="flex-1 rounded-lg border border-blue-200 bg-blue-50 py-2 text-xs font-bold text-blue-600 hover:bg-blue-100"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDeleteClick(alert)}
+                  className="flex-1 rounded-lg border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-          )}
-
-          {/* Mobile Pagination for Recent */}
-          {totalRecentPages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-4">
-              <button
-                onClick={() => setCurrentPageRecent(Math.max(0, currentPageRecent - 1))}
-                disabled={currentPageRecent === 0}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-              >
-                <LuChevronLeft className="h-4 w-4" />
-              </button>
-              <span className="text-xs font-bold text-slate-600">
-                Page {currentPageRecent + 1} of {totalRecentPages}
-              </span>
-              <button
-                onClick={() => setCurrentPageRecent(Math.min(totalRecentPages - 1, currentPageRecent + 1))}
-                disabled={currentPageRecent >= totalRecentPages - 1}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-              >
-                <LuChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          )}
+          ))}
         </div>
+
+        {paginatedRecentAlerts.length === 0 && (
+          <div className="flex-1 flex items-center justify-center text-slate-500">
+            <p className="text-sm">No active alerts found</p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalRecentPages > 0 && (
+          <div className="shrink-0 flex items-center justify-center gap-2 pt-6">
+            <button
+              onClick={() => setCurrentPageRecent((p) => Math.max(0, p - 1))}
+              disabled={currentPageRecent === 0}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            >
+              <LuChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-xs font-bold text-slate-600">
+              Page {currentPageRecent + 1} of {totalRecentPages || 1}
+            </span>
+            <button
+              onClick={() => setCurrentPageRecent((p) => Math.min(Math.max(0, totalRecentPages - 1), p + 1))}
+              disabled={currentPageRecent >= totalRecentPages - 1 || totalRecentPages === 0}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            >
+              <LuChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Expired Alerts Section */}
       {(filteredExpiredAlerts.length > 0 || expiredAlerts.length > 0) && (
-        <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <div className="flex h-[560px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="shrink-0 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center ml-4 gap-3 min-w-fit">
               <div className="flex flex-col">
@@ -578,7 +558,6 @@ export default function AlertsPage() {
               </div>
             </div>
 
-            {/* Expired Priority Filter */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 sm:justify-end">
               <div className="relative inline-block">
                 <select
@@ -603,8 +582,7 @@ export default function AlertsPage() {
             </div>
           </div>
 
-          {/* Desktop Table for Expired */}
-          <div className="hidden md:flex flex-col overflow-hidden">
+          <div className="hidden md:flex flex-col flex-1 overflow-hidden">
             <div className="overflow-x-auto overflow-y-auto">
               <table className="w-full table-fixed">
                 <thead>
@@ -673,125 +651,96 @@ export default function AlertsPage() {
                 </tbody>
               </table>
             </div>
-
-            {paginatedExpiredAlerts.length === 0 && expiredAlerts.length > 0 && (
-              <div className="flex items-center justify-center py-8 text-slate-500">
-                <p className="text-sm">No expired alerts match this filter</p>
-              </div>
-            )}
-
-            {/* Pagination for Expired */}
-            {totalExpiredPages > 1 && (
-              <div className="shrink-0 flex items-center justify-center gap-2 pt-6 border-t border-slate-200">
-                <button
-                  onClick={() => setCurrentPageExpired(Math.max(0, currentPageExpired - 1))}
-                  disabled={currentPageExpired === 0}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                >
-                  <LuChevronLeft className="h-4 w-4" />
-                </button>
-                <span className="text-xs font-bold text-slate-600">
-                  Page {currentPageExpired + 1} of {totalExpiredPages}
-                </span>
-                <button
-                  onClick={() => setCurrentPageExpired(Math.min(totalExpiredPages - 1, currentPageExpired + 1))}
-                  disabled={currentPageExpired >= totalExpiredPages - 1}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                >
-                  <LuChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* Mobile Cards for Expired */}
           <div className="space-y-4 md:hidden">
-            {paginatedExpiredAlerts.length > 0 ? (
-              paginatedExpiredAlerts.map((alert) => (
-                <div key={alert._id} className="rounded-2xl border border-slate-200 p-4 opacity-75">
-                  <div className="mb-3 flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-slate-900 truncate">{alert.title}</p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {alert.expiresAt ? formatExpiredDate(alert.expiresAt) : "N/A"}
-                      </p>
-                    </div>
-                    <span
-                      className={`inline-block rounded-full px-2 py-1 text-xs font-bold whitespace-nowrap ${getPriorityColor(
-                        alert.priority
-                      )}`}
-                    >
-                      {alert.priority}
-                    </span>
+            {paginatedExpiredAlerts.map((alert) => (
+              <div key={alert._id} className="rounded-2xl border border-slate-200 p-4 opacity-75">
+                <div className="mb-3 flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-900 truncate">{alert.title}</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {alert.expiresAt ? formatExpiredDate(alert.expiresAt) : "N/A"}
+                    </p>
                   </div>
-                  <p className="text-xs text-red-600 font-semibold mb-3">Expired</p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedAlert(alert);
-                        setViewModalOpen(true);
-                      }}
-                      className="flex-1 rounded-lg border border-slate-200 bg-white py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(alert)}
-                      className="flex-1 rounded-lg border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  <span
+                    className={`inline-block rounded-full px-2 py-1 text-xs font-bold whitespace-nowrap ${getPriorityColor(
+                      alert.priority
+                    )}`}
+                  >
+                    {alert.priority}
+                  </span>
                 </div>
-              ))
-            ) : (
-              <div className="py-8 text-center text-slate-500">
-                {expiredAlerts.length === 0 ? "No expired alerts" : "No expired alerts match this filter"}
+                <p className="text-xs text-red-600 font-semibold mb-3">Expired</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedAlert(alert);
+                      setViewModalOpen(true);
+                    }}
+                    className="flex-1 rounded-lg border border-slate-200 bg-white py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                  >
+                    View
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(alert)}
+                    className="flex-1 rounded-lg border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-            )}
-
-            {/* Mobile Pagination for Expired */}
-            {totalExpiredPages > 1 && (
-              <div className="flex items-center justify-center gap-2 pt-4">
-                <button
-                  onClick={() => setCurrentPageExpired(Math.max(0, currentPageExpired - 1))}
-                  disabled={currentPageExpired === 0}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                >
-                  <LuChevronLeft className="h-4 w-4" />
-                </button>
-                <span className="text-xs font-bold text-slate-600">
-                  Page {currentPageExpired + 1} of {totalExpiredPages}
-                </span>
-                <button
-                  onClick={() => setCurrentPageExpired(Math.min(totalExpiredPages - 1, currentPageExpired + 1))}
-                  disabled={currentPageExpired >= totalExpiredPages - 1}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                >
-                  <LuChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            )}
+            ))}
           </div>
+
+          {paginatedExpiredAlerts.length === 0 && expiredAlerts.length > 0 && (
+            <div className="flex-1 flex items-center justify-center text-slate-500">
+              <p className="text-sm">No expired alerts match this filter</p>
+            </div>
+          )}
+
+          {totalExpiredPages > 0 && (
+            <div className="shrink-0 flex items-center justify-center gap-2 pt-6">
+              <button
+                onClick={() => setCurrentPageExpired((p) => Math.max(0, p - 1))}
+                disabled={currentPageExpired === 0}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              >
+                <LuChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-xs font-bold text-slate-600">
+                Page {currentPageExpired + 1} of {totalExpiredPages || 1}
+              </span>
+              <button
+                onClick={() => setCurrentPageExpired((p) => Math.min(Math.max(0, totalExpiredPages - 1), p + 1))}
+                disabled={currentPageExpired >= totalExpiredPages - 1 || totalExpiredPages === 0}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              >
+                <LuChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Fixed Floating Action Button */}
-      <button
-        onClick={() => {
-          resetForm();
-          setCreateModalOpen(true);
-        }}
-        className="fixed bottom-6 right-6 z-40 flex items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-white font-black shadow-lg hover:bg-blue-700 transition sm:rounded-2xl"
-      >
-        <LuPlus className="h-5 w-5" />
-        <span className="hidden sm:inline">Create Alert</span>
-      </button>
+      {/* Fixed Floating Action Button - Hide when modal is open */}
+      {!isAnyModalOpen && (
+        <button
+          onClick={() => {
+            resetForm();
+            setCreateModalOpen(true);
+          }}
+          className="fixed bottom-8 right-8 z-40 flex items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-4 text-white text-sm font-bold shadow-xl hover:bg-blue-700 transition-colors"
+        >
+          <LuPlus className="h-5 w-5" />
+          <span>Create Alert</span>
+        </button>
+      )}
 
       {/* Create Alert Modal */}
       {createModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-4xl h-[90vh] rounded-[2rem] bg-white shadow-lg flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-4xl max-h-[90vh] rounded-[2rem] bg-white shadow-lg flex flex-col overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-200 bg-white p-6 flex-shrink-0">
               <h2 className="text-lg font-black text-slate-900">
@@ -808,45 +757,30 @@ export default function AlertsPage() {
               </button>
             </div>
 
-            {/* Form Container - Two Column Layout */}
-            <form onSubmit={handleCreateAlert} className="flex-1 overflow-hidden flex flex-col lg:flex-row p-6 gap-6">
-              {/* Left Side - Form Fields */}
-              <div className="lg:flex-1 overflow-y-auto border border-slate-200 rounded-2xl bg-slate-50/50 p-6 space-y-4">
-                {/* Title */}
+            {/* Form Container */}
+            <form onSubmit={handleCreateAlert} className="flex-1 overflow-y-auto flex flex-col lg:flex-row p-6 gap-6">
+              {/* Left Side */}
+              <div className="lg:flex-1 border border-slate-200 rounded-2xl bg-slate-50/50 p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Alert Title *
-                  </label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Alert Title *</label>
                   <input
                     type="text"
                     value={formData.title}
                     onChange={(e) => {
                       setFormData({ ...formData, title: e.target.value });
-                      if (formErrors.title) {
-                        setFormErrors({ ...formErrors, title: "" });
-                      }
+                      if (formErrors.title) setFormErrors({ ...formErrors, title: "" });
                     }}
                     placeholder="e.g., Heavy Rain Warning"
                     className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
-                  {formErrors.title && (
-                    <p className="mt-1 text-xs text-red-600">{formErrors.title}</p>
-                  )}
+                  {formErrors.title && <p className="mt-1 text-xs text-red-600">{formErrors.title}</p>}
                 </div>
 
-                {/* Priority */}
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Priority *
-                  </label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Priority *</label>
                   <select
                     value={formData.priority}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        priority: e.target.value as "Low" | "Medium" | "High",
-                      })
-                    }
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as "Low" | "Medium" | "High" })}
                     className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   >
                     <option value="Low">Low</option>
@@ -855,25 +789,17 @@ export default function AlertsPage() {
                   </select>
                 </div>
 
-                {/* Expiry Date & Time */}
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Expiry Date & Time (Optional)
-                  </label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Expiry Date & Time (Optional)</label>
                   <input
                     type="datetime-local"
                     value={formData.expiresAt}
-                    onChange={(e) =>
-                      setFormData({ ...formData, expiresAt: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
                     className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                   />
-                  <p className="mt-1 text-xs text-slate-500">
-                    Leave empty if the alert should never expire
-                  </p>
+                  <p className="mt-1 text-xs text-slate-500">Leave empty if the alert should never expire</p>
                 </div>
 
-                {/* All Provinces Checkbox */}
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
@@ -888,65 +814,42 @@ export default function AlertsPage() {
                     }}
                     className="rounded border-slate-200 text-blue-600"
                   />
-                  <label htmlFor="allProvinces" className="text-sm font-bold text-slate-700">
-                    Send to All Provinces (Island-wide)
-                  </label>
+                  <label htmlFor="allProvinces" className="text-sm font-bold text-slate-700">Send to All Provinces (Island-wide)</label>
                 </div>
 
-                {/* Provinces */}
                 {!allProvinces && (
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">
-                      Select Provinces *
-                    </label>
-                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-slate-50">
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Select Provinces *</label>
+                    <div className="grid grid-cols-2 gap-2 p-2 border border-slate-200 rounded-lg bg-slate-50">
                       {SRI_LANKAN_PROVINCES.map((province) => (
-                        <label
-                          key={province}
-                          className="flex items-center gap-2 text-sm text-slate-700"
-                        >
+                        <label key={province} className="flex items-center gap-2 text-sm text-slate-700">
                           <input
                             type="checkbox"
                             checked={selectedProvinces.includes(province)}
-                            onChange={(e) =>
-                              handleProvinceChange(province, e.target.checked)
-                            }
+                            onChange={(e) => handleProvinceChange(province, e.target.checked)}
                             className="rounded border-slate-200 text-blue-600"
                           />
                           {province}
                         </label>
                       ))}
                     </div>
-                    {formErrors.provinces && (
-                      <p className="mt-2 text-xs text-red-600">{formErrors.provinces}</p>
-                    )}
+                    {formErrors.provinces && <p className="mt-2 text-xs text-red-600">{formErrors.provinces}</p>}
                   </div>
                 )}
 
-                {/* Districts */}
                 {!allProvinces && selectedProvinces.length > 0 && (
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">
-                      Select Districts (Optional)
-                    </label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Select Districts (Optional)</label>
                     {getAvailableDistricts().length > 0 ? (
-                      <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-slate-50">
+                      <div className="grid grid-cols-2 gap-2 p-2 border border-slate-200 rounded-lg bg-slate-50">
                         {getAvailableDistricts().map((district) => (
-                          <label
-                            key={district}
-                            className="flex items-center gap-2 text-sm text-slate-700"
-                          >
+                          <label key={district} className="flex items-center gap-2 text-sm text-slate-700">
                             <input
                               type="checkbox"
                               checked={selectedDistricts.includes(district)}
                               onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedDistricts([...selectedDistricts, district]);
-                                } else {
-                                  setSelectedDistricts(
-                                    selectedDistricts.filter((d) => d !== district)
-                                  );
-                                }
+                                if (e.target.checked) setSelectedDistricts([...selectedDistricts, district]);
+                                else setSelectedDistricts(selectedDistricts.filter((d) => d !== district));
                               }}
                               className="rounded border-slate-200 text-blue-600"
                             />
@@ -955,37 +858,29 @@ export default function AlertsPage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-500">
-                        Select province first to view districts.
-                      </p>
+                      <p className="text-xs text-slate-500">Select province first to view districts.</p>
                     )}
                   </div>
                 )}
               </div>
 
-              {/* Right Side - Message Box */}
-              <div className="w-full lg:w-96 border border-slate-200 rounded-2xl bg-slate-50/50 p-6 flex flex-col overflow-hidden">
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Message *
-                </label>
+              {/* Right Side */}
+              <div className="w-full lg:w-96 border border-slate-200 rounded-2xl bg-slate-50/50 p-6 flex flex-col">
+                <label className="block text-sm font-bold text-slate-700 mb-2">Message *</label>
                 <textarea
                   value={formData.message}
                   onChange={(e) => {
                     setFormData({ ...formData, message: e.target.value });
-                    if (formErrors.message) {
-                      setFormErrors({ ...formErrors, message: "" });
-                    }
+                    if (formErrors.message) setFormErrors({ ...formErrors, message: "" });
                   }}
                   placeholder="Enter alert message..."
-                  className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
+                  className="flex-1 min-h-[200px] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 resize-none"
                 />
-                {formErrors.message && (
-                  <p className="mt-1 text-xs text-red-600">{formErrors.message}</p>
-                )}
+                {formErrors.message && <p className="mt-1 text-xs text-red-600">{formErrors.message}</p>}
               </div>
             </form>
 
-            {/* Fixed Buttons at Bottom Right */}
+            {/* Footer */}
             <div className="flex gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50/30 flex-shrink-0 justify-end">
               <button
                 type="button"
@@ -1011,9 +906,9 @@ export default function AlertsPage() {
 
       {/* Send Confirmation Modal */}
       {sendConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-lg">
-            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-[2rem] bg-white shadow-lg overflow-hidden">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6 bg-white">
               <h2 className="text-lg font-black text-slate-900">Confirm Send</h2>
               <button
                 onClick={() => {
@@ -1069,9 +964,9 @@ export default function AlertsPage() {
 
       {/* View Alert Modal */}
       {viewModalOpen && selectedAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-lg my-8">
-            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-6 z-10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+          <div className="max-h-[90vh] w-full max-w-2xl rounded-[2rem] bg-white shadow-lg overflow-hidden flex flex-col my-8">
+            <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white p-6 z-10 flex-shrink-0">
               <h2 className="text-lg font-black text-slate-900">Alert Details</h2>
               <button
                 onClick={() => {
@@ -1084,96 +979,64 @@ export default function AlertsPage() {
               </button>
             </div>
 
-            <div className="space-y-6 p-6">
+            <div className="space-y-6 p-6 overflow-y-auto">
               <div>
-                <label className="text-xs font-black uppercase tracking-wider text-slate-500">
-                  Alert Title
-                </label>
-                <p className="mt-2 text-sm font-bold text-slate-900">
-                  {selectedAlert.title}
-                </p>
+                <label className="text-xs font-black uppercase tracking-wider text-slate-500">Alert Title</label>
+                <p className="mt-2 text-sm font-bold text-slate-900">{selectedAlert.title}</p>
               </div>
 
               <div>
-                <label className="text-xs font-black uppercase tracking-wider text-slate-500">
-                  Message
-                </label>
-                <p className="mt-2 text-sm text-slate-700 whitespace-pre-wrap">
-                  {selectedAlert.message}
-                </p>
+                <label className="text-xs font-black uppercase tracking-wider text-slate-500">Message</label>
+                <p className="mt-2 text-sm text-slate-700 whitespace-pre-wrap">{selectedAlert.message}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">
-                    Priority
-                  </label>
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">Priority</label>
                   <p className="mt-2">
-                    <span
-                      className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${getPriorityColor(
-                        selectedAlert.priority
-                      )}`}
-                    >
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${getPriorityColor(selectedAlert.priority)}`}>
                       {selectedAlert.priority}
                     </span>
                   </p>
                 </div>
-
                 <div>
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">
-                    Expiry Status
-                  </label>
-                  <p className="mt-2 text-sm font-bold text-slate-900">
-                    {remainingTimes[selectedAlert._id] || "Loading..."}
-                  </p>
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">Expiry Status</label>
+                  <p className="mt-2 text-sm font-bold text-slate-900">{remainingTimes[selectedAlert._id] || "Loading..."}</p>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-black uppercase tracking-wider text-slate-500">
-                  Target Type
-                </label>
+                <label className="text-xs font-black uppercase tracking-wider text-slate-500">Target Type</label>
                 <p className="mt-2 text-sm font-bold text-slate-900 capitalize">
-                  {selectedAlert.targetType === "all"
-                    ? "All Provinces (Island-wide)"
-                    : selectedAlert.targetType.charAt(0).toUpperCase() +
-                      selectedAlert.targetType.slice(1)}
+                  {selectedAlert.targetType === "all" ? "All Provinces (Island-wide)" : selectedAlert.targetType}
                 </p>
               </div>
 
               {selectedAlert.targetProvinces.length > 0 && (
                 <div>
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">
-                    Target Provinces
-                  </label>
-                  <p className="mt-2 text-sm text-slate-700">
-                    {selectedAlert.targetProvinces.join(", ")}
-                  </p>
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">Target Provinces</label>
+                  <p className="mt-2 text-sm text-slate-700">{selectedAlert.targetProvinces.join(", ")}</p>
                 </div>
               )}
 
               {selectedAlert.targetDistricts.length > 0 && (
                 <div>
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">
-                    Target Districts
-                  </label>
-                  <p className="mt-2 text-sm text-slate-700">
-                    {selectedAlert.targetDistricts.join(", ")}
-                  </p>
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">Target Districts</label>
+                  <p className="mt-2 text-sm text-slate-700">{selectedAlert.targetDistricts.join(", ")}</p>
                 </div>
               )}
+            </div>
 
-              <div className="sticky bottom-0 pt-4 bg-white border-t border-slate-200 -mx-6 px-6 py-4">
-                <button
-                  onClick={() => {
-                    setViewModalOpen(false);
-                    setSelectedAlert(null);
-                  }}
-                  className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700"
-                >
-                  Close
-                </button>
-              </div>
+            <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex-shrink-0">
+              <button
+                onClick={() => {
+                  setViewModalOpen(false);
+                  setSelectedAlert(null);
+                }}
+                className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
@@ -1181,9 +1044,9 @@ export default function AlertsPage() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmOpen && selectedDeleteAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-lg">
-            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-[2rem] bg-white shadow-lg overflow-hidden">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6 bg-white">
               <h2 className="text-lg font-black text-slate-900">Delete Alert</h2>
               <button
                 onClick={() => {
@@ -1206,7 +1069,7 @@ export default function AlertsPage() {
                     Are you sure you want to delete this alert?
                   </p>
                   <p className="mt-1 text-xs text-slate-600">
-                    "{selectedDeleteAlert.title}" will be permanently deleted. This action cannot be undone.
+                    &quot;{selectedDeleteAlert.title}&quot; will be permanently deleted. This action cannot be undone.
                   </p>
                 </div>
               </div>
