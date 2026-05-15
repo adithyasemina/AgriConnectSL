@@ -21,17 +21,17 @@ export default function FinalCTASection({ language }: FinalCTASectionProps) {
   const t = translations[language];
 
   return (
-    <section className="py-16 sm:py-20 lg:py-32 px-4 sm:px-6 lg:px-8 bg-slate-50 w-full">
+    <section className="py-20 sm:py-28 lg:py-32 px-4 sm:px-6 lg:px-8 bg-white w-full">
       <div className="max-w-4xl mx-auto">
         {/* Content */}
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 mb-4 sm:mb-6">
             {t.heading}
           </h2>
-          <p className="text-base sm:text-lg text-slate-600 mb-6 sm:mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-slate-600 mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
             {t.paragraph}
           </p>
-          <button className="px-6 sm:px-8 py-2.5 sm:py-3 bg-slate-900 text-white font-bold rounded-full hover:bg-slate-800 transition-colors text-sm sm:text-base">
+          <button className="px-8 sm:px-10 py-3 sm:py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base">
             {t.button}
           </button>
         </div>

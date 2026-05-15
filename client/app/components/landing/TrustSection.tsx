@@ -44,17 +44,17 @@ export default function TrustSection({ language }: TrustSectionProps) {
             {/* Features */}
             <div className="space-y-6 sm:space-y-8">
               {t.features.map((feature) => (
-                <div key={feature.number} className="flex gap-4">
+                <div key={feature.number} className="flex gap-4 sm:gap-6 group">
                   <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center h-10 sm:h-12 w-10 sm:w-12 rounded-lg bg-slate-900 text-white text-xs sm:text-sm font-black">
+                    <div className="flex items-center justify-center h-12 sm:h-14 w-12 sm:w-14 rounded-xl bg-blue-600 text-white text-xs sm:text-sm font-black shadow-md group-hover:shadow-lg transition-shadow">
                       {feature.number}
                     </div>
                   </div>
-                  <div>
+                  <div className="pt-1">
                     <h3 className="text-lg sm:text-xl font-black text-slate-900 mb-1 sm:mb-2">
                       {feature.title}
                     </h3>
-                    <p className="text-slate-600 text-sm sm:text-base">{feature.description}</p>
+                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed">{feature.description}</p>
                   </div>
                 </div>
               ))}

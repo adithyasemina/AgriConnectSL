@@ -49,7 +49,7 @@ export default function CaseStudySection({ language }: CaseStudySectionProps) {
               <p className="text-xs sm:text-sm lg:text-base text-slate-600 mb-4 sm:mb-6 leading-relaxed">
                 {t.paragraph}
               </p>
-              <button className="px-4 sm:px-6 py-2 sm:py-2.5 bg-slate-900 text-white font-bold rounded-full hover:bg-slate-800 transition-colors text-xs sm:text-sm">
+              <button className="px-6 sm:px-7 py-2.5 sm:py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg text-xs sm:text-sm">
                 {t.button}
               </button>
             </div>

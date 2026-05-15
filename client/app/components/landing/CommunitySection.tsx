@@ -43,7 +43,7 @@ export default function CommunitySection({ language }: CommunitySectionProps) {
           <div className="relative w-40 sm:w-48 h-40 sm:h-48 flex items-center justify-center">
             {/* Big Stat Number */}
             <div className="text-center z-10 px-2">
-              <div className="text-4xl sm:text-6xl lg:text-7xl font-black text-purple-600 leading-none">
+              <div className="text-4xl sm:text-6xl lg:text-7xl font-black text-blue-600 leading-none">
                 243,543+
               </div>
               <p className="text-xs sm:text-sm text-slate-600 mt-2">{t.stats}</p>
@@ -74,7 +74,7 @@ export default function CommunitySection({ language }: CommunitySectionProps) {
           </div>
 
           {/* CTA Button */}
-          <button className="px-6 sm:px-8 py-2.5 sm:py-3 bg-slate-900 text-white font-bold rounded-full hover:bg-slate-800 transition-colors text-sm sm:text-base">
+          <button className="px-8 sm:px-10 py-3 sm:py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base">
             {t.button}
           </button>
         </div>

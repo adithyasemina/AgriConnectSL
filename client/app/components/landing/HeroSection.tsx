@@ -31,19 +31,19 @@ export default function HeroSection({ language }: HeroSectionProps) {
   const t = translations[language];
 
   return (
-    <section className="relative pt-16 sm:pt-20 pb-24 sm:pb-32 px-4 sm:px-6 lg:px-8 bg-white w-full overflow-hidden">
+    <section className="relative pt-24 sm:pt-32 pb-20 sm:pb-28 px-4 sm:px-6 lg:px-8 bg-white w-full overflow-hidden">
       <div className="max-w-4xl mx-auto">
         {/* Headline */}
         <div className="text-center mb-12 sm:mb-16">
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 mb-4 sm:mb-6 leading-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 mb-4 sm:mb-6 leading-tight">
             {t.heading}
           </h1>
-          <p className="text-base sm:text-lg lg:text-xl text-slate-600 mb-6 sm:mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-slate-600 mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
             {t.subtitle}
           </p>
           <Link
             href="/account"
-            className="inline-block px-6 sm:px-8 py-2.5 sm:py-3 bg-slate-900 text-white font-bold rounded-full hover:bg-slate-800 transition-colors text-sm sm:text-base"
+            className="inline-block px-8 sm:px-10 py-3 sm:py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
           >
             {t.cta}
           </Link>
@@ -61,16 +61,16 @@ export default function HeroSection({ language }: HeroSectionProps) {
 
           {/* Floating Cards */}
           {/* Left Card */}
-          <div className="absolute -bottom-8 sm:bottom-8 left-2 sm:left-8 bg-white rounded-2xl shadow-xl p-4 sm:p-6 w-40 sm:w-56 transform -rotate-3 hover:rotate-0 transition-transform">
-            <div className="text-slate-500 text-xs sm:text-sm font-semibold mb-2">{t.growthLabel}</div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 mb-1">+42%</div>
+          <div className="absolute -bottom-8 sm:bottom-8 left-2 sm:left-8 bg-white rounded-2xl shadow-xl p-4 sm:p-6 w-40 sm:w-56 transform -rotate-3 hover:rotate-0 transition-all hover:shadow-2xl">
+            <div className="text-slate-500 text-xs sm:text-sm font-bold mb-2 uppercase tracking-wide">{t.growthLabel}</div>
+            <div className="text-2xl sm:text-3xl font-black text-blue-600 mb-1">+42%</div>
             <div className="text-slate-600 text-xs sm:text-sm">{t.growthValue}</div>
           </div>
 
           {/* Right Card */}
-          <div className="absolute -bottom-4 sm:bottom-16 right-2 sm:right-8 bg-white rounded-2xl shadow-xl p-4 sm:p-6 w-40 sm:w-56 transform rotate-3 hover:rotate-0 transition-transform">
-            <div className="text-slate-500 text-xs sm:text-sm font-semibold mb-2">{t.taskLabel}</div>
-            <div className="text-2xl sm:text-3xl font-black text-red-600 mb-1">12</div>
+          <div className="absolute -bottom-4 sm:bottom-16 right-2 sm:right-8 bg-white rounded-2xl shadow-xl p-4 sm:p-6 w-40 sm:w-56 transform rotate-3 hover:rotate-0 transition-all hover:shadow-2xl">
+            <div className="text-slate-500 text-xs sm:text-sm font-bold mb-2 uppercase tracking-wide">{t.taskLabel}</div>
+            <div className="text-2xl sm:text-3xl font-black text-emerald-600 mb-1">12</div>
             <div className="text-slate-600 text-xs sm:text-sm">{t.taskValue}</div>
           </div>
         </div>

@@ -17,10 +17,10 @@ export default function TransformationSection({ language }: TransformationSectio
   const t = translations[language];
 
   return (
-    <section className="relative py-20 sm:py-32 px-4 sm:px-6 lg:px-8 bg-slate-950 text-white overflow-hidden w-full">
+    <section className="relative py-20 sm:py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-600 to-blue-800 text-white overflow-hidden w-full">
       <div className="max-w-4xl mx-auto">
         {/* Heading */}
-        <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-center mb-12 sm:mb-20 leading-tight">
+        <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-center mb-12 sm:mb-20 leading-tight text-white">
           {t.heading}
         </h2>
 

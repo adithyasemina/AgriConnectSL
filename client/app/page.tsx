@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Navbar from "./components/Navbar";
+import ChatbotWidget from "./components/ChatbotWidget";
 import HeroSection from "./components/landing/HeroSection";
 import TransformationSection from "./components/landing/TransformationSection";
 import TrustSection from "./components/landing/TrustSection";
@@ -19,6 +20,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-white text-slate-950">
       <Navbar language={language} setLanguage={setLanguage} />
+      <ChatbotWidget />
       <HeroSection language={language} />
       <TransformationSection language={language} />
       <TrustSection language={language} />
