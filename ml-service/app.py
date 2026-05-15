@@ -228,55 +228,100 @@ def chatbot():
 def predict_leaf():
     try:
         if "image" not in request.files:
+            print("Error: Image file is required")
             return jsonify({
+                "success": False,
                 "error": "Image file is required"
             }), 400
 
         file = request.files["image"]
+
+        if file.filename == "":
+            print("Error: No image selected")
+            return jsonify({
+                "success": False,
+                "error": "No image selected"
+            }), 400
+
+        print(f"Processing image: {file.filename}, Size: {len(file.read())} bytes")
+        file.seek(0)
 
         language = request.form.get("language", "en")
 
         if language not in ["en", "si"]:
             language = "en"
 
-        img_bytes = BytesIO(file.read())
-        img = image.load_img(
-            img_bytes,
-            target_size=(224, 224)
-        )
+        try:
+            img_bytes = BytesIO(file.read())
+            img = image.load_img(
+                img_bytes,
+                target_size=(224, 224)
+            )
+            print("Image loaded successfully")
 
-        img_array = image.img_to_array(img)
+            img_array = image.img_to_array(img)
+            print(f"Image array shape: {img_array.shape}")
 
-        img_array = np.expand_dims(img_array, axis=0)
+            img_array = np.expand_dims(img_array, axis=0)
+            print(f"Expanded array shape: {img_array.shape}")
 
-        img_array = tf.keras.applications.mobilenet_v2.preprocess_input(
-            img_array
-        )
+            img_array = tf.keras.applications.mobilenet_v2.preprocess_input(
+                img_array
+            )
+            print("Image preprocessed successfully")
 
-        predictions = leaf_model.predict(img_array)
+            predictions = leaf_model.predict(img_array)
+            print(f"Predictions shape: {predictions.shape}")
+            print(f"Predictions: {predictions[0]}")
 
-        predicted_index = int(np.argmax(predictions[0]))
+            predicted_index = int(np.argmax(predictions[0]))
+            confidence = float(predictions[0][predicted_index] * 100)
+            predicted_class = leaf_class_names[predicted_index]
 
-        confidence = float(predictions[0][predicted_index] * 100)
+            print(f"Predicted: {predicted_class} (index {predicted_index}, confidence {confidence}%)")
 
-        predicted_class = leaf_class_names[predicted_index]
+            disease_name = translations.get(predicted_class, {}).get(
+                language,
+                predicted_class
+            )
 
-        disease_name = translations.get(predicted_class, {}).get(
-            language,
-            predicted_class
-        )
+            all_predictions = []
+            for idx, class_name in enumerate(leaf_class_names):
+                pred_confidence = float(predictions[0][idx] * 100)
+                label = translations.get(class_name, {}).get(language, class_name)
+                all_predictions.append({
+                    "label": label,
+                    "confidence": round(pred_confidence, 2)
+                })
 
-        return jsonify({
-            "success": True,
-            "predicted_class": predicted_class,
-            "disease_name": disease_name,
-            "confidence": round(confidence, 2),
-            "language": language
-        })
+            all_predictions.sort(key=lambda x: x["confidence"], reverse=True)
+
+            response = {
+                "success": True,
+                "prediction": disease_name,
+                "confidence": round(confidence, 2),
+                "classIndex": predicted_index,
+                "predictedClass": predicted_class,
+                "allPredictions": all_predictions,
+                "language": language
+            }
+            print(f"Returning response: {response}")
+            return jsonify(response)
+
+        except Exception as inner_error:
+            error_msg = f"Processing error: {str(inner_error)}"
+            print(error_msg)
+            return jsonify({
+                "success": False,
+                "error": error_msg
+            }), 500
 
     except Exception as e:
+        error_msg = f"Prediction endpoint error: {str(e)}"
+        print(error_msg)
         return jsonify({
-            "error": str(e)
+            "success": False,
+            "error": error_msg
         }), 500
 
 

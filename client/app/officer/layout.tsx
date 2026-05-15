@@ -2,7 +2,6 @@
 
 import ProtectedRoute from "@/app/components/ProtectedRoute";
 import PageTitleBar from "@/app/components/PageTitleBar";
-import NotificationDropdown from "@/app/components/NotificationDropdown";
 import { clearAuthData, getAuthUser } from "@/lib/auth";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -141,11 +140,6 @@ export default function OfficerLayout({ children }: { children: ReactNode }) {
               {/* Profile Badge */}
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white">
                 {user?.firstName?.[0] || "O"}
-              </div>
-
-              {/* Notification Dropdown */}
-              <div className="hidden sm:block">
-                <NotificationDropdown />
               </div>
             </div>
           </header>
