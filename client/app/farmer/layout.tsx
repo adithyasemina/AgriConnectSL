@@ -15,13 +15,17 @@ import {
   LuMessageCircle,
   LuBell,
   LuLogOut,
+  LuBeaker,
+  LuCheck,
 } from "react-icons/lu";
 
 const menuItems = [
   { name: "Dashboard", href: "/farmer", icon: LuLayoutDashboard },
   { name: "Find Disease", href: "/farmer/find", icon: LuSearch },
+  { name: "Soil Test", href: "/farmer/soil-test", icon: LuBeaker },
   { name: "Chat", href: "/farmer/chat", icon: LuMessageCircle },
   { name: "Alerts", href: "/farmer/alerts", icon: LuBell },
+  { name: "Notifications", href: "/farmer/notifications", icon: LuCheck },
 ];
 
 export default function FarmerLayout({ children }: { children: ReactNode }) {

@@ -24,6 +24,10 @@ const pageInfoMap: Record<string, PageInfo> = {
     title: "Alerts",
     description: "View notifications and alerts from officers",
   },
+  "/farmer/notifications": {
+    title: "Notifications",
+    description: "Updates about your soil tests and other important alerts",
+  },
 };
 
 export default function PageTitleBarFarmer() {

@@ -352,3 +352,128 @@ exports.getFarmerSoilNotifications = async (req, res) => {
     });
   }
 };
+
+exports.getMyFarmerNotifications = async (req, res) => {
+  try {
+    const farmerId = req.user._id;
+
+    if (!farmerId) {
+      return res.status(400).json({
+        message: "Farmer ID not found in user data",
+      });
+    }
+
+    const notifications = await SoilNotification.find({
+      farmerId,
+    }).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      notifications: notifications || [],
+    });
+  } catch (error) {
+    console.error("Get farmer notifications error:", error.message);
+    return res.status(500).json({
+      message: "Failed to retrieve notifications",
+      error: error.message,
+    });
+  }
+};
+
+exports.getFarmerMyTests = async (req, res) => {
+  try {
+    const farmerId = req.user._id;
+
+    const soilTests = await SoilTest.find({
+      farmerId,
+    })
+      .populate("approvedOfficerId", "-password")
+      .sort({ submitDate: -1 });
+
+    const pendingTests = soilTests.filter((test) => test.status === "pending");
+    const completedTests = soilTests.filter((test) => test.status === "completed");
+
+    return res.status(200).json({
+      message: "Farmer soil tests retrieved successfully",
+      soilTests: {
+        pending: pendingTests,
+        completed: completedTests,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to retrieve farmer soil tests",
+      error: error.message,
+    });
+  }
+};
+
+exports.submitFarmerSoilTest = async (req, res) => {
+  try {
+    const farmerId = req.user._id;
+    const farmerName = `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim();
+    const farmerEmail = req.user.email;
+    const province = req.user.province;
+    const district = req.user.district;
+
+    const { farmerNumber, farmerNote } = req.body;
+
+    if (!farmerNumber || !farmerNumber.trim()) {
+      return res.status(400).json({
+        message: "Officer number is required",
+      });
+    }
+
+    if (!province || !district) {
+      return res.status(400).json({
+        message: "Farmer location (province and district) is not set",
+      });
+    }
+
+    // Verify the officer number is valid and issued for this district
+    const issuedNumber = await OfficerNumber.findOne({
+      number: farmerNumber.trim(),
+      district,
+    });
+
+    if (!issuedNumber) {
+      return res.status(400).json({
+        message: "Invalid officer number for your district",
+      });
+    }
+
+    if (issuedNumber.isUsed) {
+      return res.status(400).json({
+        message: "This officer number has already been used",
+      });
+    }
+
+    const soilTest = await SoilTest.create({
+      farmerId,
+      farmerName,
+      farmerEmail,
+      province,
+      district,
+      farmerNumber: farmerNumber.trim(),
+      farmerNote: farmerNote || "",
+      status: "pending",
+      submitDate: new Date(),
+      submitTime: getTime(),
+    });
+
+    // Mark the officer number as used
+    issuedNumber.isUsed = true;
+    issuedNumber.usedByFarmerId = farmerId;
+    issuedNumber.usedAt = new Date();
+    await issuedNumber.save();
+
+    return res.status(201).json({
+      message: "Soil test request submitted successfully",
+      soilTest,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to submit soil test request",
+      error: error.message,
+    });
+  }
+};
