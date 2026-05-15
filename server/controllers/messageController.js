@@ -60,6 +60,21 @@ exports.createFarmerMessage = async (req, res) => {
       });
     }
 
+    // Emit to officers in same province
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`officer:province:${chat.province}`).emit("chat:new-message", {
+        chatId: chat._id,
+        farmerName: chat.farmerName,
+        farmerEmail: chat.farmerEmail,
+        province: chat.province,
+        district: chat.district,
+        status: chat.status,
+        lastMessage: chat.messages[chat.messages.length - 1],
+        updatedAt: chat.updatedAt,
+      });
+    }
+
     return res.status(201).json({
       message: "Message sent successfully",
       chat,
@@ -80,7 +95,6 @@ exports.getOfficerMessages = async (req, res) => {
 
     const chats = await Message.find({
       province: req.user.province,
-      district: req.user.district,
       $or: [
         { status: "done" },
         { assignedOfficerId: null },
@@ -131,11 +145,10 @@ exports.assignChat = async (req, res) => {
     const chat = await Message.findOne({
       _id: req.params.id,
       province: req.user.province,
-      district: req.user.district,
     });
 
     if (!chat) {
-      return res.status(404).json({ message: "Chat not found for your district" });
+      return res.status(404).json({ message: "Chat not found for your province" });
     }
 
     if (chat.status === "done") {
@@ -182,12 +195,9 @@ exports.replyMessage = async (req, res) => {
     }
 
     if (req.user.role === "officer") {
-      if (
-        chat.province !== req.user.province ||
-        chat.district !== req.user.district
-      ) {
+      if (chat.province !== req.user.province) {
         return res.status(403).json({
-          message: "Access denied for this district",
+          message: "Access denied for this province",
         });
       }
 
@@ -235,6 +245,25 @@ exports.replyMessage = async (req, res) => {
 
     await chat.save();
 
+    // Emit socket events
+    const io = req.app.get("io");
+    if (io) {
+      // Send to farmer
+      io.to(`farmer:${chat.farmerId}`).emit("chat:new-message", {
+        chatId: chat._id,
+        lastMessage: chat.messages[chat.messages.length - 1],
+        status: chat.status,
+        assignedOfficerName: chat.assignedOfficerName,
+      });
+
+      // Notify province officers about list update
+      io.to(`officer:province:${chat.province}`).emit("chat:list-updated", {
+        chatId: chat._id,
+        status: chat.status,
+        assignedOfficerId: chat.assignedOfficerId,
+      });
+    }
+
     return res.status(200).json({
       message: "Reply sent successfully",
       chat,
@@ -249,37 +278,29 @@ exports.replyMessage = async (req, res) => {
 
 exports.markChatDone = async (req, res) => {
   try {
+    if (req.user.role !== "officer") {
+      return res.status(403).json({ message: "Officer only - farmers cannot mark chat done" });
+    }
+
     const chat = await Message.findById(req.params.id);
 
     if (!chat) {
       return res.status(404).json({ message: "Chat not found" });
     }
 
-    if (req.user.role === "officer") {
-      if (
-        chat.province !== req.user.province ||
-        chat.district !== req.user.district
-      ) {
-        return res.status(403).json({
-          message: "Access denied for this district",
-        });
-      }
-
-      if (
-        chat.assignedOfficerId &&
-        chat.assignedOfficerId.toString() !== req.user._id.toString()
-      ) {
-        return res.status(403).json({
-          message: "Only assigned officer can mark this chat done",
-        });
-      }
+    if (chat.province !== req.user.province) {
+      return res.status(403).json({
+        message: "Access denied for this province",
+      });
     }
 
     if (
-      req.user.role === "farmer" &&
-      chat.farmerId.toString() !== req.user._id.toString()
+      chat.assignedOfficerId &&
+      chat.assignedOfficerId.toString() !== req.user._id.toString()
     ) {
-      return res.status(403).json({ message: "Access denied" });
+      return res.status(403).json({
+        message: "Only assigned officer can mark this chat done",
+      });
     }
 
     chat.status = "done";
@@ -290,6 +311,22 @@ exports.markChatDone = async (req, res) => {
     chat.closedAt = new Date();
 
     await chat.save();
+
+    // Emit socket events
+    const io = req.app.get("io");
+    if (io) {
+      // Notify farmer
+      io.to(`farmer:${chat.farmerId}`).emit("chat:done", {
+        chatId: chat._id,
+        status: "done",
+      });
+
+      // Notify province officers about list update
+      io.to(`officer:province:${chat.province}`).emit("chat:list-updated", {
+        chatId: chat._id,
+        status: "done",
+      });
+    }
 
     return res.status(200).json({
       message: "Chat marked as done",

@@ -11,6 +11,7 @@ import {
   LuSend,
   LuUser,
 } from "react-icons/lu";
+import { initSocket, onChatNewMessage, onChatListUpdated, getSocket } from "@/lib/socket";
 
 type ChatMessage = {
   _id?: string;
@@ -50,6 +51,7 @@ export default function MessagesPage() {
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    initSocket();
     fetchChats();
   }, []);
 
@@ -58,7 +60,25 @@ export default function MessagesPage() {
     if (!container) return;
 
     container.scrollTop = container.scrollHeight;
-  }, [selectedChat]);
+  }, [selectedChat?.messages]);
+
+  useEffect(() => {
+    // Listen for socket events and silently refetch chat list
+    const unsubscribeNewMessage = onChatNewMessage((data) => {
+      // Silent refetch to get fresh chat list with correct visibility/sorting
+      fetchChats();
+    });
+
+    const unsubscribeListUpdated = onChatListUpdated((data) => {
+      // Silent refetch to apply correct visibility (hide assigned to other officers, etc.)
+      fetchChats();
+    });
+
+    return () => {
+      unsubscribeNewMessage();
+      unsubscribeListUpdated();
+    };
+  }, []);
 
   const fetchChats = async () => {
     setLoading(true);
@@ -202,11 +222,11 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-0">
-      <div className="h-[calc(100vh-110px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="flex flex-col h-[calc(100vh-140px)] overflow-hidden">
+      <div className="flex-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="grid h-full grid-cols-1 lg:grid-cols-[390px_1fr]">
-          <aside className="border-b border-slate-200 lg:border-b-0 lg:border-r">
-            <div className="border-b border-slate-200 p-4 sm:p-5">
+          <aside className="flex flex-col border-b border-slate-200 lg:border-b-0 lg:border-r overflow-hidden">
+            <div className="flex-shrink-0 border-b border-slate-200 p-4 sm:p-5">
               <div className="relative">
                 <LuSearch className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
                 <input
@@ -219,7 +239,7 @@ export default function MessagesPage() {
               </div>
             </div>
 
-            <div className="h-[calc(100%-81px)] overflow-y-auto">
+            <div className="flex-1 min-h-0 overflow-y-auto">
               {filteredChats.length > 0 ? (
                 filteredChats.map((chat) => {
                   const active = selectedChat?._id === chat._id;
@@ -288,10 +308,10 @@ export default function MessagesPage() {
             </div>
           </aside>
 
-          <section className="flex min-h-0 flex-col">
+          <section className="flex flex-col min-h-0 overflow-hidden">
             {selectedChat ? (
               <>
-                <div className="flex flex-col gap-4 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                <div className="flex-shrink-0 flex flex-col gap-4 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                   <div className="flex items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-sm font-black text-white">
                       {getInitial(selectedChat.farmerName)}
@@ -314,7 +334,7 @@ export default function MessagesPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2 sm:flex-row">
+                  <div className="flex flex-col gap-2 sm:flex-row flex-shrink-0">
                     <button
                       onClick={handleDone}
                       disabled={doneLoading || selectedChat.status === "done"}
@@ -330,7 +350,7 @@ export default function MessagesPage() {
                   </div>
                 </div>
 
-                <div ref={messagesContainerRef} className="flex-1 space-y-5 overflow-y-auto bg-white p-4 sm:p-6">
+                <div ref={messagesContainerRef} className="flex-1 min-h-0 space-y-5 overflow-y-auto bg-white p-4 sm:p-6">
                   {selectedChat.messages.map((message, index) => {
                     const isOfficer = message.senderRole === "officer";
 
@@ -362,7 +382,7 @@ export default function MessagesPage() {
                   })}
                 </div>
 
-                <form onSubmit={handleReply} className="border-t border-slate-200 p-4 sm:p-6">
+                <form onSubmit={handleReply} className="flex-shrink-0 border-t border-slate-200 p-4 sm:p-6">
                   <div className="flex gap-3">
                     <textarea
                       value={replyText}
