@@ -42,3 +42,5 @@ ml-service/models/chatbot/
 *.pt
 *.pth
 *.safetensors
+
+.claude

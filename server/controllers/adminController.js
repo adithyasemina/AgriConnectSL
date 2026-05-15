@@ -1,4 +1,6 @@
 const User = require("../models/User");
+const SoilTest = require("../models/SoilTest");
+const Message = require("../models/Message");
 const bcrypt = require("bcryptjs");
 
 // Admin adds officer
@@ -28,5 +30,31 @@ exports.addOfficer = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+// Get dashboard stats for admin
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const totalFarmers = await User.countDocuments({ role: "farmer" });
+    const activeOfficers = await User.countDocuments({ role: "officer", isActive: true });
+    const completedSoilTests = await SoilTest.countDocuments({ status: "completed" });
+    const doneMessages = await Message.countDocuments({ status: "done" });
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalFarmers,
+        activeOfficers,
+        completedSoilTests,
+        doneMessages,
+      },
+    });
+  } catch (error) {
+    console.error("Dashboard stats error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
   }
 };

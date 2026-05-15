@@ -1,3 +1,22 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+
+type DashboardStats = {
+  totalFarmers: number;
+  activeOfficers: number;
+  completedSoilTests: number;
+  doneMessages: number;
+};
+
+const defaultStats: DashboardStats = {
+  totalFarmers: 0,
+  activeOfficers: 0,
+  completedSoilTests: 0,
+  doneMessages: 0,
+};
+
 function StatIcon({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/15 text-white">
@@ -72,8 +91,8 @@ function ChartLine() {
     <svg viewBox="0 0 700 260" className="h-full w-full">
       <defs>
         <linearGradient id="lineFill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#059669" stopOpacity="0.18" />
-          <stop offset="100%" stopColor="#059669" stopOpacity="0" />
+          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
         </linearGradient>
       </defs>
 
@@ -85,7 +104,7 @@ function ChartLine() {
       <path
         d="M40 210 C120 198 135 205 205 184 C270 164 300 172 365 145 C440 114 480 118 545 86 C610 54 650 62 680 40"
         fill="none"
-        stroke="#059669"
+        stroke="#2563eb"
         strokeWidth="4"
         strokeLinecap="round"
       />
@@ -139,9 +158,37 @@ const teamActivity = [
 ];
 
 export default function AdminDashboardPage() {
+  const [stats, setStats] = useState<DashboardStats>(defaultStats);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDashboardStats = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/api/admin/dashboard-stats");
+
+      if (response.data.success) {
+        setStats({
+          totalFarmers: response.data.stats.totalFarmers || 0,
+          activeOfficers: response.data.stats.activeOfficers || 0,
+          completedSoilTests: response.data.stats.completedSoilTests || 0,
+          doneMessages: response.data.stats.doneMessages || 0,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch dashboard stats:", error);
+      setStats(defaultStats);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-600 via-emerald-500 to-cyan-500 p-6 text-white shadow-xl shadow-emerald-600/20 sm:p-8">
+      <section className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-blue-600 to-blue-400 p-6 text-white shadow-xl shadow-blue-600/20 sm:p-8">
         <div>
           <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
             Good morning, Admin
@@ -155,26 +202,26 @@ export default function AdminDashboardPage() {
           <HeroStat
             icon={<ActivityIcon />}
             label="Total Farmers"
-            value="620"
-            change="+12.4% vs last month"
+            value={loading ? "..." : String(stats.totalFarmers)}
+            change="Registered farmers"
           />
           <HeroStat
             icon={<UsersIcon />}
             label="Active Officers"
-            value="18"
-            change="+8.2% vs last month"
+            value={loading ? "..." : String(stats.activeOfficers)}
+            change="Active officers"
           />
           <HeroStat
             icon={<RocketIcon />}
-            label="Appointments"
-            value="342"
-            change="+24.1% vs last month"
+            label="Completed Soil Tests"
+            value={loading ? "..." : String(stats.completedSoilTests)}
+            change="Completed tests"
           />
           <HeroStat
             icon={<ActivityIcon />}
-            label="System Uptime"
-            value="99.98%"
-            change="+0.02% vs last month"
+            label="Done Messages"
+            value={loading ? "..." : String(stats.doneMessages)}
+            change="Completed chats"
           />
         </div>
       </section>
@@ -228,17 +275,17 @@ export default function AdminDashboardPage() {
                 </p>
               </div>
 
-              <button className="text-xs font-black text-emerald-600">
+              <button className="text-xs font-black text-blue-600">
                 View board ↗
               </button>
             </div>
 
             <div className="mt-7 h-3 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full w-[72%] rounded-full bg-emerald-600" />
+              <div className="h-full w-[72%] rounded-full bg-blue-600" />
             </div>
 
             <div className="mt-5 grid gap-3 text-xs font-bold text-slate-500 sm:grid-cols-3">
-              <ProgressLabel dot="bg-emerald-600" text="Completed (14)" />
+              <ProgressLabel dot="bg-blue-600" text="Completed (14)" />
               <ProgressLabel dot="bg-slate-400" text="In Progress (5)" />
               <ProgressLabel dot="bg-slate-300" text="To Do (2)" />
             </div>
@@ -255,7 +302,7 @@ export default function AdminDashboardPage() {
                 </p>
               </div>
 
-              <button className="text-xs font-black text-emerald-600">
+              <button className="text-xs font-black text-blue-600">
                 View all ↗
               </button>
             </div>
@@ -266,7 +313,7 @@ export default function AdminDashboardPage() {
                   key={item.name + item.time}
                   className="flex items-center gap-3"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-black text-white">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">
                     {item.initials}
                   </div>
 

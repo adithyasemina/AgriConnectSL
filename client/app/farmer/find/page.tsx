@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { getToken } from "@/lib/auth";
+import { getLanguage, t } from "@/lib/i18n";
 
 function UploadIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -140,9 +141,18 @@ export default function FindDiseasePage() {
   const [historyError, setHistoryError] = useState<string>("");
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedDetail, setSelectedDetail] = useState<HistoryItem | null>(null);
+  const [language, setLanguage] = useState<string>("en");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    setLanguage(getLanguage());
+    const handleStorageChange = () => {
+      setLanguage(getLanguage());
+    };
+    window.addEventListener("storage", handleStorageChange);
     fetchHistory();
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   const fetchHistory = async () => {
@@ -274,7 +284,7 @@ export default function FindDiseasePage() {
         {/* Upload Section */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-6 text-lg font-black text-slate-900">
-            Upload Image
+            {mounted ? t("uploadImage", language as any) : "Upload Image"}
           </h2>
 
           {!previewUrl ? (
@@ -282,7 +292,7 @@ export default function FindDiseasePage() {
               <div className="cursor-pointer rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50 px-6 py-12 text-center transition hover:bg-blue-100">
                 <UploadIcon className="mx-auto mb-4 h-10 w-10 text-blue-600" />
                 <p className="text-sm font-bold text-slate-900">
-                  Click to upload or drag and drop
+                  {mounted && language === "si" ? "උඩුවීමට ක්‍ලික් කරන්න හෝ ඇද ඇද දමන්න" : "Click to upload or drag and drop"}
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
                   PNG, JPG, GIF up to 10MB
@@ -306,7 +316,7 @@ export default function FindDiseasePage() {
               </div>
 
               <div className="rounded-lg bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">Filename:</p>
+                <p className="text-xs text-slate-500">{mounted ? t("imageName", language as any) : "Filename"}:</p>
                 <p className="truncate text-sm font-bold text-slate-900">
                   {fileName}
                 </p>
@@ -318,14 +328,14 @@ export default function FindDiseasePage() {
                   disabled={isAnalyzing}
                   className="flex-1 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {isAnalyzing ? "Analyzing..." : "Analyze Disease"}
+                  {isAnalyzing ? (mounted && language === "si" ? "විශ්ලේෂණ කරමින්..." : "Analyzing...") : (mounted ? t("analyzeDisease", language as any) : "Analyze Disease")}
                 </button>
                 <button
                   onClick={handleReset}
                   disabled={isAnalyzing}
                   className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-600 hover:bg-slate-50 disabled:opacity-50"
                 >
-                  Change Image
+                  {mounted && language === "si" ? "ඡායාව වෙනස් කරන්න" : "Change Image"}
                 </button>
               </div>
             </div>
@@ -339,7 +349,7 @@ export default function FindDiseasePage() {
               <div className="flex items-start gap-3">
                 <AlertIcon className="h-5 w-5 flex-shrink-0 text-red-600 mt-0.5" />
                 <div>
-                  <p className="text-sm font-black text-red-600">Error</p>
+                  <p className="text-sm font-black text-red-600">{mounted ? t("error", language as any) : "Error"}</p>
                   <p className="text-sm text-red-700 mt-1">{error}</p>
                 </div>
               </div>
@@ -385,7 +395,7 @@ export default function FindDiseasePage() {
 
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="text-lg font-black text-slate-900 mb-4">
-                  All Predictions
+                  {mounted ? t("allPredictions", language as any) : "All Predictions"}
                 </h3>
                 <div className="space-y-2">
                   {result.allPredictions.map((pred, idx) => (
@@ -418,7 +428,7 @@ export default function FindDiseasePage() {
                 <div className="flex items-center gap-2 mb-4">
                   <AlertIcon className="h-5 w-5 text-blue-600" />
                   <h3 className="text-lg font-black text-slate-900">
-                    Recommendations
+                    {mounted ? t("recommendations", language as any) : "Recommendations"}
                   </h3>
                 </div>
                 <ul className="space-y-2">
@@ -466,14 +476,14 @@ export default function FindDiseasePage() {
       <div className="mt-8">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-6 text-lg font-black text-slate-900">
-            Recent Disease Analyses
+            {mounted ? t("diseasePredictionHistory", language as any) : "Recent Disease Analyses"}
           </h2>
 
           {historyLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="flex flex-col items-center gap-3">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
-                <p className="text-sm text-slate-500">Loading history...</p>
+                <p className="text-sm text-slate-500">{mounted ? (language === "si" ? "ඉතිහාසය පටවෙමින්..." : "Loading history...") : "Loading history..."}</p>
               </div>
             </div>
           ) : historyError ? (
@@ -482,7 +492,7 @@ export default function FindDiseasePage() {
             </div>
           ) : history.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <p className="text-sm text-slate-500">No previous analyses yet.</p>
+              <p className="text-sm text-slate-500">{mounted ? t("noHistory", language as any) : "No previous analyses yet."}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -490,19 +500,19 @@ export default function FindDiseasePage() {
                 <thead>
                   <tr className="border-b border-slate-100">
                     <th className="px-4 py-3 text-left text-xs font-black uppercase text-slate-500">
-                      Image
+                      {mounted ? t("imageName", language as any) : "Image"}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-black uppercase text-slate-500">
-                      Prediction
+                      {mounted ? t("disease", language as any) : "Prediction"}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-black uppercase text-slate-500">
-                      Confidence
+                      {mounted ? t("confidence", language as any) : "Confidence"}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-black uppercase text-slate-500">
-                      Date
+                      {mounted ? t("dateAnalyzed", language as any) : "Date"}
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-black uppercase text-slate-500">
-                      Action
+                      {mounted && language === "si" ? "ක්‍රියාව" : "Action"}
                     </th>
                   </tr>
                 </thead>
@@ -547,7 +557,7 @@ export default function FindDiseasePage() {
                           onClick={() => handleViewHistory(item)}
                           className="inline-flex items-center justify-center rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-100 transition"
                         >
-                          View
+                          {mounted ? t("view", language as any) : "View"}
                         </button>
                       </td>
                     </tr>
@@ -566,7 +576,7 @@ export default function FindDiseasePage() {
             {/* Modal Header */}
             <div className="sticky top-0 flex items-center justify-between border-b border-slate-100 bg-white p-6">
               <h2 className="text-xl font-black text-slate-900">
-                Analysis Details
+                {mounted && language === "si" ? "විශ්ලේෂණ විස්තර" : "Analysis Details"}
               </h2>
               <button
                 onClick={() => setDetailModalOpen(false)}
@@ -594,7 +604,7 @@ export default function FindDiseasePage() {
               {/* Image Info */}
               <div className="rounded-lg bg-slate-50 p-4">
                 <p className="text-xs font-bold uppercase text-slate-500 mb-1">
-                  Image Name
+                  {mounted ? t("imageName", language as any) : "Image Name"}
                 </p>
                 <p className="text-sm font-bold text-slate-900 break-all">
                   {selectedDetail.imageName}
@@ -605,7 +615,7 @@ export default function FindDiseasePage() {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm font-bold text-slate-600 mb-2">
-                    Predicted Disease
+                    {mounted && language === "si" ? "පුරෝකථනය කළ රෝග" : "Predicted Disease"}
                   </p>
                   <p className="text-2xl font-black text-slate-900">
                     {selectedDetail.prediction}
@@ -614,7 +624,7 @@ export default function FindDiseasePage() {
 
                 <div>
                   <p className="text-sm font-bold text-slate-600 mb-2">
-                    Confidence Score
+                    {mounted ? t("confidence", language as any) : "Confidence Score"}
                   </p>
                   <div className="flex items-end gap-3">
                     <p className="text-3xl font-black text-blue-600">
@@ -637,7 +647,7 @@ export default function FindDiseasePage() {
               {/* Date Analyzed */}
               <div className="rounded-lg bg-slate-50 p-4">
                 <p className="text-xs font-bold uppercase text-slate-500 mb-1">
-                  Date Analyzed
+                  {mounted ? t("dateAnalyzed", language as any) : "Date Analyzed"}
                 </p>
                 <p className="text-sm font-bold text-slate-900">
                   {new Date(selectedDetail.updatedAt).toLocaleDateString(
@@ -656,7 +666,7 @@ export default function FindDiseasePage() {
               {/* All Predictions */}
               <div>
                 <h3 className="text-sm font-black text-slate-900 mb-3 uppercase">
-                  All Predictions
+                  {mounted ? t("allPredictions", language as any) : "All Predictions"}
                 </h3>
                 <div className="space-y-2">
                   {selectedDetail.allPredictions.map((pred, idx) => (
@@ -688,7 +698,7 @@ export default function FindDiseasePage() {
               {/* Recommendations */}
               <div>
                 <h3 className="text-sm font-black text-slate-900 mb-3 uppercase">
-                  Recommendations
+                  {mounted ? t("recommendations", language as any) : "Recommendations"}
                 </h3>
                 <ul className="space-y-2">
                   {(DISEASE_RECOMMENDATIONS[selectedDetail.prediction] ||
@@ -713,7 +723,7 @@ export default function FindDiseasePage() {
                 onClick={() => setDetailModalOpen(false)}
                 className="rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-black text-slate-600 hover:bg-slate-50 transition"
               >
-                Close
+                {mounted ? t("close", language as any) : "Close"}
               </button>
             </div>
           </div>

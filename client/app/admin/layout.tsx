@@ -205,8 +205,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           }`}
         >
           <div className="flex h-20 items-center gap-3 border-b border-slate-100 px-6">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-white">
-              <LogoIcon />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-white">
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z" />
+                <path d="M12 6v6l5 3" stroke="white" strokeWidth={2} fill="none" strokeLinecap="round" />
+              </svg>
             </div>
 
             <div>
@@ -214,7 +217,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 AgriConnect
               </h1>
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                Dashboard
+                Admin Panel
               </p>
             </div>
           </div>
@@ -236,8 +239,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     onClick={() => setIsMobileOpen(false)}
                     className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
                       active
-                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
-                        : "text-slate-500 hover:bg-emerald-50 hover:text-emerald-600"
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                        : "text-slate-500 hover:bg-blue-50 hover:text-blue-600"
                     }`}
                   >
                     <Icon />
@@ -249,19 +252,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="border-t border-slate-100 p-4">
-            <div className="mb-4 flex items-center gap-3 rounded-2xl bg-slate-50 p-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-sm font-black text-white">
-                {user?.firstName?.[0] || "A"}
-              </div>
-
-              <div className="min-w-0">
-                <p className="truncate text-sm font-black text-slate-900">
-                  {user?.firstName || "Admin"} {user?.lastName || ""}
-                </p>
-                <p className="text-xs font-semibold text-slate-400">Admin</p>
-              </div>
-            </div>
-
             <button
               onClick={handleLogout}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 px-4 py-3 text-sm font-black text-red-600 transition hover:bg-red-100"
@@ -273,8 +263,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </aside>
 
         <div className="min-h-screen lg:pl-72">
-          <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
-            <div className="flex items-center gap-4">
+          <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/90 backdrop-blur-xl">
+            {/* Left Section: Menu + Page Title */}
+            <div className="flex flex-1 items-center gap-2 px-4 sm:px-6 lg:px-8">
               <button
                 onClick={() => setIsMobileOpen(true)}
                 className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-600 lg:hidden"
@@ -282,39 +273,22 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               >
                 <MenuIcon />
               </button>
-
-              <div className="hidden w-72 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-400 sm:flex">
-                <SearchIcon />
-                <input
-                  type="text"
-                  placeholder="Search anything..."
-                  className="w-full bg-transparent text-sm font-medium outline-none placeholder:text-slate-400"
-                />
-                <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black text-slate-400">
-                  ⌘K
-                </span>
-              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button className="hidden rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-black text-white sm:block">
-                + New Order
-              </button>
-
-              <div className="hidden h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-500 sm:flex">
-                ☾
+            {/* Right Section: User Info + Profile */}
+            <div className="flex items-center gap-4 px-4 sm:px-6 lg:px-8">
+              {/* User Name and Role */}
+              <div className="hidden sm:flex flex-col items-end">
+                <p className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                  {user?.firstName || "Admin"} Profile
+                </p>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Admin
+                </p>
               </div>
 
-              <div className="hidden h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-500 sm:flex">
-                ⚙
-              </div>
-
-              <div className="relative hidden h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-500 sm:flex">
-                🔔
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-600" />
-              </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-sm font-black text-white">
+              {/* Profile Badge */}
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white">
                 {user?.firstName?.[0] || "A"}
               </div>
             </div>

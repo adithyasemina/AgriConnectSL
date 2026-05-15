@@ -3,9 +3,10 @@
 import ProtectedRoute from "@/app/components/ProtectedRoute";
 import PageTitleBarFarmer from "@/app/components/PageTitleBarFarmer";
 import { clearAuthData, getAuthUser } from "@/lib/auth";
+import { getLanguage, t } from "@/lib/i18n";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import {
   LuLeaf,
   LuMenu,
@@ -16,23 +17,38 @@ import {
   LuLogOut,
   LuBeaker,
   LuCheck,
+  LuSettings,
 } from "react-icons/lu";
 
-const menuItems = [
-  { name: "Dashboard", href: "/farmer", icon: LuLayoutDashboard },
-  { name: "Find Disease", href: "/farmer/find", icon: LuSearch },
-  { name: "Soil Test", href: "/farmer/soil-test", icon: LuBeaker },
-  { name: "Chat", href: "/farmer/chat", icon: LuMessageCircle },
-  { name: "Alerts", href: "/farmer/alerts", icon: LuBell },
-  { name: "Notifications", href: "/farmer/notifications", icon: LuCheck },
+const getMenuItems = (language: string) => [
+  { name: t("dashboard", language as any), href: "/farmer", icon: LuLayoutDashboard },
+  { name: t("findDisease", language as any), href: "/farmer/find", icon: LuSearch },
+  { name: t("soilTest", language as any), href: "/farmer/soil-test", icon: LuBeaker },
+  { name: t("chat", language as any), href: "/farmer/chat", icon: LuMessageCircle },
+  { name: t("alerts", language as any), href: "/farmer/alerts", icon: LuBell },
+  { name: t("notifications", language as any), href: "/farmer/notifications", icon: LuCheck },
+  { name: t("settings", language as any), href: "/farmer/settings", icon: LuSettings },
 ];
 
 export default function FarmerLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const user = getAuthUser();
-
+  const [language, setLanguage] = useState<string>("en");
+  const [mounted, setMounted] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    setLanguage(getLanguage());
+    const handleStorageChange = () => {
+      setLanguage(getLanguage());
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  const menuItems = getMenuItems(language);
 
   const handleLogout = () => {
     clearAuthData();
@@ -65,14 +81,14 @@ export default function FarmerLayout({ children }: { children: ReactNode }) {
                 AgriConnect
               </h1>
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                Farmer Panel
+                {mounted ? t("farmerPanel", language as any) : "Farmer Panel"}
               </p>
             </div>
           </div>
 
           <nav className="flex-1 overflow-y-auto px-4 py-6">
             <p className="mb-3 px-3 text-xs font-black uppercase tracking-widest text-slate-400">
-              Farmer Menu
+              {mounted ? t("farmerMenu", language as any) : "Farmer Menu"}
             </p>
 
             <div className="space-y-1">
@@ -105,7 +121,7 @@ export default function FarmerLayout({ children }: { children: ReactNode }) {
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 px-4 py-3 text-sm font-black text-red-600 transition hover:bg-red-100"
             >
               <LuLogOut className="h-5 w-5" />
-              Logout
+              {mounted ? t("logout", language as any) : "Logout"}
             </button>
           </div>
         </aside>
